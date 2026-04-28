@@ -26,7 +26,7 @@ export default function Metrics() {
       const result = statusForClient(client, activeTypes, allRecords, config);
       const okCount = result.statuses.filter((s) => s === "ok").length;
       return {
-        name: client.code ?? client.name,
+        name: client.name,
         fullName: client.name,
         conformidade: result.score,
         okCount,
@@ -63,9 +63,9 @@ export default function Metrics() {
             <div style={{ height: Math.max(400, compliance.length * 36) }}>
               <ResponsiveContainer>
                 <BarChart data={compliance} layout="vertical" margin={{ left: 8, right: 48, top: 8, bottom: 8 }} barCategoryGap={6}>
-                  <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical verticalPoints={undefined} />
+                  <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
                   <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
-                  <YAxis dataKey="name" type="category" width={56} tick={{ fontSize: 11 }} interval={0} />
+                  <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} interval={0} />
                   <Tooltip
                     cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                     contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }}
