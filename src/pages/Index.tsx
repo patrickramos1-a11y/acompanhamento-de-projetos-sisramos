@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, ChevronsUpDown, Filter, Plus, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronsUpDown, Filter, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,13 +16,15 @@ import { cn } from "@/lib/utils";
 
 const filters: (StatusKey | "all")[] = ["all", "overdue", "warning", "missing", "requested", "ok"];
 
-type SortMode = "critical" | "alpha" | "alphaDesc" | "scoreAsc" | "scoreDesc";
+type SortKey = "critical" | "alpha" | "score";
+type SortDir = "asc" | "desc";
 
 export default function Index() {
   const { clients, projectTypes, records, settings, isLoading, error } = usePlatformData();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
-  const [sort, setSort] = useState<SortMode>("critical");
+  const [sortKey, setSortKey] = useState<SortKey>("critical");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [typeFilterOpen, setTypeFilterOpen] = useState(false);
 
@@ -54,13 +56,14 @@ export default function Index() {
       })
       .filter(({ worst }) => statusFilter === "all" || worst === statusFilter)
       .sort((a, b) => {
-        if (sort === "alpha") return a.client.name.localeCompare(b.client.name);
-        if (sort === "alphaDesc") return b.client.name.localeCompare(a.client.name);
-        if (sort === "scoreAsc") return a.score - b.score;
-        if (sort === "scoreDesc") return b.score - a.score;
-        return statusMeta[b.worst].rank - statusMeta[a.worst].rank || a.client.name.localeCompare(b.client.name);
+        const dir = sortDir === "asc" ? 1 : -1;
+        if (sortKey === "alpha") return a.client.name.localeCompare(b.client.name) * dir;
+        if (sortKey === "score") return (a.score - b.score) * dir;
+        // critical: desc = mais críticos primeiro
+        const cmp = statusMeta[b.worst].rank - statusMeta[a.worst].rank;
+        return (sortDir === "desc" ? cmp : -cmp) || a.client.name.localeCompare(b.client.name);
       });
-  }, [clients.data, types, allRecords, config, search, statusFilter, sort, selectedTypeIds]);
+  }, [clients.data, types, allRecords, config, search, statusFilter, sortKey, sortDir, selectedTypeIds]);
 
   if (isLoading) return <PageSkeleton />;
   if (error || !config) return <EmptyState title="Não foi possível carregar os dados." />;
@@ -94,16 +97,25 @@ export default function Index() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-9" placeholder="Buscar por cliente, sigla ou responsável" value={search} onChange={(event) => setSearch(event.target.value)} />
         </div>
-        <Select value={sort} onValueChange={(value) => setSort(value as SortMode)}>
-          <SelectTrigger className="w-full lg:w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="critical">Críticos primeiro</SelectItem>
-            <SelectItem value="alpha">Alfabética (A-Z)</SelectItem>
-            <SelectItem value="alphaDesc">Alfabética (Z-A)</SelectItem>
-            <SelectItem value="scoreAsc">Menor conformidade</SelectItem>
-            <SelectItem value="scoreDesc">Maior conformidade</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex w-full gap-2 lg:w-auto">
+          <Select value={sortKey} onValueChange={(value) => setSortKey(value as SortKey)}>
+            <SelectTrigger className="w-full lg:w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="critical">Criticidade</SelectItem>
+              <SelectItem value="alpha">Alfabética</SelectItem>
+              <SelectItem value="score">Conformidade</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={sortDir === "desc" ? "Maior para menor" : "Menor para maior"}
+            title={sortDir === "desc" ? "Maior para menor" : "Menor para maior"}
+            onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+          >
+            {sortDir === "desc" ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
+          </Button>
+        </div>
         <Popover open={typeFilterOpen} onOpenChange={setTypeFilterOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-full justify-between lg:w-64">
