@@ -1,4 +1,4 @@
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
 import { usePlatformData } from "@/hooks/useProjectData";
 import { computeStatus, statusMeta, statusOrder } from "@/lib/status";
