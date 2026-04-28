@@ -140,18 +140,21 @@ export type Database = {
       }
       responsibles: {
         Row: {
+          color: string
           created_at: string
           id: string
           name: string
           updated_at: string
         }
         Insert: {
+          color?: string
           created_at?: string
           id?: string
           name: string
           updated_at?: string
         }
         Update: {
+          color?: string
           created_at?: string
           id?: string
           name?: string
