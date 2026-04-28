@@ -98,11 +98,76 @@ export default function Index() {
           <SelectTrigger className="w-full lg:w-56"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="critical">Críticos primeiro</SelectItem>
-            <SelectItem value="alpha">Alfabética</SelectItem>
+            <SelectItem value="alpha">Alfabética (A-Z)</SelectItem>
+            <SelectItem value="alphaDesc">Alfabética (Z-A)</SelectItem>
             <SelectItem value="scoreAsc">Menor conformidade</SelectItem>
             <SelectItem value="scoreDesc">Maior conformidade</SelectItem>
           </SelectContent>
         </Select>
+        <Popover open={typeFilterOpen} onOpenChange={setTypeFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-between lg:w-64">
+              <span className="flex items-center gap-2 truncate">
+                <Filter className="h-4 w-4" />
+                {selectedTypeIds.length === 0 ? (
+                  "Filtrar por projeto"
+                ) : (
+                  <>
+                    Projetos
+                    <Badge variant="secondary" className="ml-1">{selectedTypeIds.length}</Badge>
+                  </>
+                )}
+              </span>
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar projeto..." />
+              <CommandList>
+                <CommandEmpty>Nenhum projeto encontrado.</CommandEmpty>
+                <CommandGroup>
+                  {sortedTypes.map((type) => {
+                    const checked = selectedTypeIds.includes(type.id);
+                    return (
+                      <CommandItem
+                        key={type.id}
+                        value={`${type.name} ${type.abbreviation ?? ""}`}
+                        onSelect={() => toggleType(type.id)}
+                      >
+                        <div
+                          className={cn(
+                            "mr-2 flex h-4 w-4 items-center justify-center rounded border",
+                            checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40",
+                          )}
+                        >
+                          {checked && <Check className="h-3 w-3" />}
+                        </div>
+                        <span className="flex-1 truncate">{type.name}</span>
+                        {type.abbreviation && (
+                          <span className="ml-2 text-xs text-muted-foreground">{type.abbreviation}</span>
+                        )}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+              {selectedTypeIds.length > 0 && (
+                <div className="border-t p-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-center"
+                    onClick={() => setSelectedTypeIds([])}
+                  >
+                    <X className="h-4 w-4" />
+                    Limpar seleção
+                  </Button>
+                </div>
+              )}
+            </Command>
+          </PopoverContent>
+        </Popover>
         <div className="flex flex-wrap gap-1">
           {filters.map((filter) => (
             <Button key={filter} variant={statusFilter === filter ? "default" : "outline"} size="sm" onClick={() => setStatusFilter(filter)}>
