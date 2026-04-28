@@ -1,9 +1,6 @@
 import type { ReactNode } from "react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, Check, Clock, GripVertical, Plus, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, Clock, Plus, Save, Trash2 } from "lucide-react";
 import { computeStatus, statusMeta, type StatusKey } from "@/lib/status";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
