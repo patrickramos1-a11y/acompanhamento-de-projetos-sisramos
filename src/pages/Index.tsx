@@ -28,7 +28,7 @@ export default function Index() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [typeFilterOpen, setTypeFilterOpen] = useState(false);
-  const [responsibleFilter, setResponsibleFilter] = useState<string>("all");
+  const [responsibleFilters, setResponsibleFilters] = useState<string[]>([]);
   const [responsibleFilterOpen, setResponsibleFilterOpen] = useState(false);
 
   const types = projectTypes.data ?? [];
@@ -61,10 +61,10 @@ export default function Index() {
           const hasAny = clientRecords.some((r) => selectedTypeIds.includes(r.project_type_id));
           if (!hasAny) return false;
         }
-        if (responsibleFilter !== "all") {
+        if (responsibleFilters.length > 0) {
           const clientRecords = recordsForClient(allRecords, client.id);
           const hasAny = clientRecords.some(
-            (r) => (r as any).planned === true && (r as any).responsible_id === responsibleFilter,
+            (r) => (r as any).planned === true && responsibleFilters.includes((r as any).responsible_id),
           );
           if (!hasAny) return false;
         }
@@ -79,7 +79,7 @@ export default function Index() {
         const cmp = statusMeta[b.worst].rank - statusMeta[a.worst].rank;
         return (sortDir === "desc" ? cmp : -cmp) || a.client.name.localeCompare(b.client.name);
       });
-  }, [clients.data, types, allRecords, config, search, statusFilters, sortKey, sortDir, selectedTypeIds, responsibleFilter]);
+  }, [clients.data, types, allRecords, config, search, statusFilters, sortKey, sortDir, selectedTypeIds, responsibleFilters]);
 
   if (isLoading) return <PageSkeleton />;
   if (error || !config) return <EmptyState title="Não foi possível carregar os dados." />;
@@ -270,9 +270,14 @@ export default function Index() {
             <Button variant="outline" className="w-full justify-between lg:w-56">
               <span className="flex items-center gap-2 truncate">
                 <Filter className="h-4 w-4" />
-                {responsibleFilter === "all"
-                  ? "Filtrar por responsável"
-                  : sortedResponsibles.find((r) => r.id === responsibleFilter)?.name ?? "Responsável"}
+                {responsibleFilters.length === 0 ? (
+                  "Filtrar por responsável"
+                ) : (
+                  <>
+                    Responsável
+                    <Badge variant="secondary" className="ml-1">{responsibleFilters.length}</Badge>
+                  </>
+                )}
               </span>
               <ChevronsUpDown className="h-4 w-4 opacity-50" />
             </Button>
@@ -283,35 +288,17 @@ export default function Index() {
               <CommandList>
                 <CommandEmpty>Nenhum responsável encontrado.</CommandEmpty>
                 <CommandGroup>
-                  <CommandItem
-                    value="Todos os responsáveis"
-                    onSelect={() => {
-                      setResponsibleFilter("all");
-                      setResponsibleFilterOpen(false);
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        "mr-2 flex h-4 w-4 items-center justify-center rounded border",
-                        responsibleFilter === "all"
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-muted-foreground/40",
-                      )}
-                    >
-                      {responsibleFilter === "all" && <Check className="h-3 w-3" />}
-                    </div>
-                    <span className="flex-1 truncate">Todos os responsáveis</span>
-                  </CommandItem>
                   {sortedResponsibles.map((r) => {
-                    const checked = responsibleFilter === r.id;
+                    const checked = responsibleFilters.includes(r.id);
                     return (
                       <CommandItem
                         key={r.id}
                         value={r.name}
-                        onSelect={() => {
-                          setResponsibleFilter(r.id);
-                          setResponsibleFilterOpen(false);
-                        }}
+                        onSelect={() =>
+                          setResponsibleFilters((prev) =>
+                            prev.includes(r.id) ? prev.filter((x) => x !== r.id) : [...prev, r.id],
+                          )
+                        }
                       >
                         <div
                           className={cn(
@@ -329,6 +316,19 @@ export default function Index() {
                   })}
                 </CommandGroup>
               </CommandList>
+              {responsibleFilters.length > 0 && (
+                <div className="border-t p-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-center"
+                    onClick={() => setResponsibleFilters([])}
+                  >
+                    <X className="h-4 w-4" />
+                    Limpar seleção
+                  </Button>
+                </div>
+              )}
             </Command>
           </PopoverContent>
         </Popover>
@@ -347,7 +347,7 @@ export default function Index() {
               types={types}
               records={recordsForClient(allRecords, client.id)}
               settings={config}
-              highlightResponsibleId={responsibleFilter !== "all" ? responsibleFilter : null}
+              highlightResponsibleIds={responsibleFilters.length > 0 ? responsibleFilters : null}
             />
           ))}
         </section>
