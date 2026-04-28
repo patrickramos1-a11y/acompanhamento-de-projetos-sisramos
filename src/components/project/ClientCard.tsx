@@ -178,6 +178,8 @@ export function ClientCard({ client, types, records, settings }: Props) {
                     {chipIcon(status)}
                     <span>{type.abbreviation}</span>
                     {status === "ok" && record.year ? <span className="opacity-80">· {record.year}</span> : null}
+                    {status === "planned" && (record as any).planned_for ? <span className="opacity-80">· {formatPlannedFor((record as any).planned_for)}</span> : null}
+                    {status === "late" ? <span className="opacity-80">· atrasado</span> : null}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
