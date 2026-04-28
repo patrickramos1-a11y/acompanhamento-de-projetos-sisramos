@@ -29,6 +29,7 @@ export default function Index() {
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [typeFilterOpen, setTypeFilterOpen] = useState(false);
   const [responsibleFilter, setResponsibleFilter] = useState<string>("all");
+  const [responsibleFilterOpen, setResponsibleFilterOpen] = useState(false);
 
   const types = projectTypes.data ?? [];
   const allRecords = records.data ?? [];
@@ -264,17 +265,73 @@ export default function Index() {
             </Command>
           </PopoverContent>
         </Popover>
-        <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
-          <SelectTrigger className="w-full lg:w-56">
-            <SelectValue placeholder="Filtrar por responsável" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os responsáveis</SelectItem>
-            {sortedResponsibles.map((r) => (
-              <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={responsibleFilterOpen} onOpenChange={setResponsibleFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-between lg:w-56">
+              <span className="flex items-center gap-2 truncate">
+                <Filter className="h-4 w-4" />
+                {responsibleFilter === "all"
+                  ? "Filtrar por responsável"
+                  : sortedResponsibles.find((r) => r.id === responsibleFilter)?.name ?? "Responsável"}
+              </span>
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar responsável..." />
+              <CommandList>
+                <CommandEmpty>Nenhum responsável encontrado.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="Todos os responsáveis"
+                    onSelect={() => {
+                      setResponsibleFilter("all");
+                      setResponsibleFilterOpen(false);
+                    }}
+                  >
+                    <div
+                      className={cn(
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-full border",
+                        responsibleFilter === "all"
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-muted-foreground/40",
+                      )}
+                    >
+                      {responsibleFilter === "all" && <Check className="h-3 w-3" />}
+                    </div>
+                    <span className="flex-1 truncate">Todos os responsáveis</span>
+                  </CommandItem>
+                  {sortedResponsibles.map((r) => {
+                    const checked = responsibleFilter === r.id;
+                    return (
+                      <CommandItem
+                        key={r.id}
+                        value={r.name}
+                        onSelect={() => {
+                          setResponsibleFilter(r.id);
+                          setResponsibleFilterOpen(false);
+                        }}
+                      >
+                        <div
+                          className={cn(
+                            "mr-2 flex h-4 w-4 items-center justify-center rounded-full border",
+                            checked
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-muted-foreground/40",
+                          )}
+                        >
+                          {checked && <Check className="h-3 w-3" />}
+                        </div>
+                        <span className="flex-1 truncate">{r.name}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </section>
 
       {total === 0 ? (
