@@ -183,13 +183,18 @@ export default function Index() {
             </Command>
           </PopoverContent>
         </Popover>
-        <div className="flex flex-wrap gap-1">
-          {filters.map((filter) => (
-            <Button key={filter} variant={statusFilter === filter ? "default" : "outline"} size="sm" onClick={() => setStatusFilter(filter)}>
-              {filter === "all" ? "Todos" : statusMeta[filter].label}
-            </Button>
-          ))}
-        </div>
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusKey | "all")}>
+          <SelectTrigger className="w-full lg:w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {filters.map((filter) => (
+              <SelectItem key={filter} value={filter}>
+                {filter === "all" ? "Todos" : statusMeta[filter].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </section>
 
       {total === 0 ? (
