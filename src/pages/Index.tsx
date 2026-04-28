@@ -97,16 +97,25 @@ export default function Index() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-9" placeholder="Buscar por cliente, sigla ou responsável" value={search} onChange={(event) => setSearch(event.target.value)} />
         </div>
-        <Select value={sort} onValueChange={(value) => setSort(value as SortMode)}>
-          <SelectTrigger className="w-full lg:w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="critical">Críticos primeiro</SelectItem>
-            <SelectItem value="alpha">Alfabética (A-Z)</SelectItem>
-            <SelectItem value="alphaDesc">Alfabética (Z-A)</SelectItem>
-            <SelectItem value="scoreAsc">Menor conformidade</SelectItem>
-            <SelectItem value="scoreDesc">Maior conformidade</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex w-full gap-2 lg:w-auto">
+          <Select value={sortKey} onValueChange={(value) => setSortKey(value as SortKey)}>
+            <SelectTrigger className="w-full lg:w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="critical">Criticidade</SelectItem>
+              <SelectItem value="alpha">Alfabética</SelectItem>
+              <SelectItem value="score">Conformidade</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={sortDir === "desc" ? "Maior para menor" : "Menor para maior"}
+            title={sortDir === "desc" ? "Maior para menor" : "Menor para maior"}
+            onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+          >
+            {sortDir === "desc" ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
+          </Button>
+        </div>
         <Popover open={typeFilterOpen} onOpenChange={setTypeFilterOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-full justify-between lg:w-64">
