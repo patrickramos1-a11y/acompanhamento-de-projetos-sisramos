@@ -176,7 +176,7 @@ export default function Configure() {
         <TabsList><TabsTrigger value="clients">Clientes</TabsTrigger><TabsTrigger value="types">Tipos</TabsTrigger><TabsTrigger value="settings">Gerais</TabsTrigger></TabsList>
         <TabsContent value="clients" className="mt-4 space-y-3">
           <div className="flex justify-end"><CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} /></div>
-          {clients.data?.length ? clients.data.map((client) => (
+          {sortedClients.length ? sortedClients.map((client) => (
             <ClientRow
               key={client.id}
               client={client}
@@ -189,12 +189,8 @@ export default function Configure() {
         </TabsContent>
         <TabsContent value="types" className="mt-4 space-y-3">
           <div className="flex justify-end"><CreateProjectTypeDialog nextOrder={nextOrder} /></div>
-          {orderedTypes.length ? (
-            <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-              <SortableContext items={orderedTypes.map((type) => type.id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2">{orderedTypes.map((type) => <SortableTypeRow key={type.id} type={type} />)}</div>
-              </SortableContext>
-            </DndContext>
+          {sortedTypes.length ? (
+            <div className="space-y-2">{sortedTypes.map((type) => <TypeRow key={type.id} type={type} />)}</div>
           ) : <EmptyState title="Nenhum tipo de projeto cadastrado." />}
         </TabsContent>
         <TabsContent value="settings" className="mt-4 max-w-2xl space-y-5 rounded-lg border bg-card p-4">
