@@ -1,18 +1,22 @@
 import { useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Filter, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 import { ClientCard } from "@/components/project/ClientCard";
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
 import { CreateClientDialog } from "@/pages/Configure";
 import { usePlatformData } from "@/hooks/useProjectData";
 import { statusMeta, StatusKey } from "@/lib/status";
 import { recordsForClient, statusForClient } from "@/lib/project-view";
+import { cn } from "@/lib/utils";
 
 const filters: (StatusKey | "all")[] = ["all", "overdue", "warning", "missing", "requested", "ok"];
 
-type SortMode = "critical" | "alpha" | "scoreAsc" | "scoreDesc";
+type SortMode = "critical" | "alpha" | "alphaDesc" | "scoreAsc" | "scoreDesc";
 
 export default function Index() {
   const { clients, projectTypes, records, settings, isLoading, error } = usePlatformData();
