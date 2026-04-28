@@ -31,7 +31,7 @@ export function ClientCard({ client, types, records, settings }: Props) {
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-base font-semibold">{client.name}</h2>
-          <p className="text-xs text-muted-foreground">{client.code}{client.responsible ? ` · ${client.responsible}` : ""}</p>
+          {client.code ? <p className="text-xs text-muted-foreground">{client.code}</p> : null}
         </div>
         <span className="text-sm font-medium">{score}%</span>
       </div>

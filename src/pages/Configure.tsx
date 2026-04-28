@@ -17,16 +17,12 @@ import { ProjectType, useCreateClient, useCreateProjectType, useDeleteClient, us
 export function CreateClientDialog({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [responsible, setResponsible] = useState("");
   const createClient = useCreateClient();
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    await createClient.mutateAsync({ name, code: code.toUpperCase(), responsible: responsible.trim() || null });
+    await createClient.mutateAsync({ name, code: null, responsible: null });
     setName("");
-    setCode("");
-    setResponsible("");
     setOpen(false);
   }
 
@@ -39,11 +35,7 @@ export function CreateClientDialog({ trigger }: { trigger: ReactNode }) {
           <DialogDescription>Cria o cliente e os registros em branco para os tipos ativos.</DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={submit}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2"><Label>Nome</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
-            <div className="space-y-2"><Label>Sigla</Label><Input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} required /></div>
-            <div className="space-y-2"><Label>Responsável</Label><Input value={responsible} onChange={(e) => setResponsible(e.target.value)} /></div>
-          </div>
+          <div className="space-y-2"><Label>Nome</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
           <DialogFooter><Button disabled={createClient.isPending}><Plus className="h-4 w-4" />Cadastrar</Button></DialogFooter>
         </form>
       </DialogContent>
@@ -153,16 +145,14 @@ export default function Configure() {
         <TabsContent value="clients" className="mt-4 space-y-3">
           <div className="flex justify-end"><CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} /></div>
           {clients.data?.length ? clients.data.map((client) => (
-            <div key={client.id} className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-[1fr_120px_1fr_auto] md:items-center">
+            <div key={client.id} className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-[1fr_auto] md:items-center">
               <Input defaultValue={client.name} onBlur={(e) => e.target.value !== client.name && updateClient.mutate({ id: client.id, values: { name: e.target.value } })} />
-              <Input defaultValue={client.code} onBlur={(e) => e.target.value !== client.code && updateClient.mutate({ id: client.id, values: { code: e.target.value.toUpperCase() } })} />
-              <Input defaultValue={client.responsible ?? ""} onBlur={(e) => e.target.value !== (client.responsible ?? "") && updateClient.mutate({ id: client.id, values: { responsible: e.target.value || null } })} />
               <AlertDialog onOpenChange={() => setConfirmCode("")}>
                 <AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
                 <AlertDialogContent>
-                  <AlertDialogHeader><AlertDialogTitle>Excluir {client.code}?</AlertDialogTitle><AlertDialogDescription>Digite a sigla exata para confirmar a exclusão do cliente.</AlertDialogDescription></AlertDialogHeader>
-                  <Input value={confirmCode} onChange={(e) => setConfirmCode(e.target.value.toUpperCase())} />
-                  <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction disabled={confirmCode !== client.code} onClick={() => deleteClient.mutate(client.id)}>Excluir</AlertDialogAction></AlertDialogFooter>
+                  <AlertDialogHeader><AlertDialogTitle>Excluir {client.name}?</AlertDialogTitle><AlertDialogDescription>Digite o nome exato para confirmar a exclusão do cliente.</AlertDialogDescription></AlertDialogHeader>
+                  <Input value={confirmCode} onChange={(e) => setConfirmCode(e.target.value)} />
+                  <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction disabled={confirmCode !== client.name} onClick={() => deleteClient.mutate(client.id)}>Excluir</AlertDialogAction></AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             </div>

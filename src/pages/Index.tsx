@@ -29,7 +29,7 @@ export default function Index() {
     return (clients.data ?? [])
       .map((client) => ({ client, ...statusForClient(client, types, allRecords, config) }))
       .filter(({ client, worst }) => {
-        const matchesSearch = `${client.name} ${client.code} ${client.responsible ?? ""}`.toLowerCase().includes(search.toLowerCase());
+        const matchesSearch = `${client.name} ${client.code ?? ""}`.toLowerCase().includes(search.toLowerCase());
         return matchesSearch && (statusFilter === "all" || worst === statusFilter);
       })
       .sort((a, b) => {
