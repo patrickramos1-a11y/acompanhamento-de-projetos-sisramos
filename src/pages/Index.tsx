@@ -23,26 +23,44 @@ export default function Index() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
   const [sort, setSort] = useState<SortMode>("critical");
+  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
+  const [typeFilterOpen, setTypeFilterOpen] = useState(false);
 
   const types = projectTypes.data ?? [];
   const allRecords = records.data ?? [];
   const config = settings.data;
 
+  const sortedTypes = useMemo(
+    () => [...types].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+    [types],
+  );
+
+  const toggleType = (id: string) =>
+    setSelectedTypeIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
   const rows = useMemo(() => {
     if (!config) return [];
     return (clients.data ?? [])
       .map((client) => ({ client, ...statusForClient(client, types, allRecords, config) }))
-      .filter(({ client, worst }) => {
+      .filter(({ client }) => {
         const matchesSearch = `${client.name} ${client.code ?? ""}`.toLowerCase().includes(search.toLowerCase());
-        return matchesSearch && (statusFilter === "all" || worst === statusFilter);
+        if (!matchesSearch) return false;
+        if (selectedTypeIds.length > 0) {
+          const clientRecords = recordsForClient(allRecords, client.id);
+          const hasAny = clientRecords.some((r) => selectedTypeIds.includes(r.project_type_id));
+          if (!hasAny) return false;
+        }
+        return true;
       })
+      .filter(({ worst }) => statusFilter === "all" || worst === statusFilter)
       .sort((a, b) => {
         if (sort === "alpha") return a.client.name.localeCompare(b.client.name);
+        if (sort === "alphaDesc") return b.client.name.localeCompare(a.client.name);
         if (sort === "scoreAsc") return a.score - b.score;
         if (sort === "scoreDesc") return b.score - a.score;
         return statusMeta[b.worst].rank - statusMeta[a.worst].rank || a.client.name.localeCompare(b.client.name);
       });
-  }, [clients.data, types, allRecords, config, search, statusFilter, sort]);
+  }, [clients.data, types, allRecords, config, search, statusFilter, sort, selectedTypeIds]);
 
   if (isLoading) return <PageSkeleton />;
   if (error || !config) return <EmptyState title="Não foi possível carregar os dados." />;
