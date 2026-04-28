@@ -23,7 +23,8 @@ export default function Index() {
   const { clients, projectTypes, records, settings, isLoading, error } = usePlatformData();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
-  const [sort, setSort] = useState<SortMode>("critical");
+  const [sortKey, setSortKey] = useState<SortKey>("critical");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [typeFilterOpen, setTypeFilterOpen] = useState(false);
 
