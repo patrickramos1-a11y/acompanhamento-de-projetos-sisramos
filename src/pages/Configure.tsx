@@ -10,7 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
-import { ProjectType, Responsible, useCreateClient, useCreateProjectType, useCreateResponsible, useDeleteClient, useDeleteProjectType, useDeleteResponsible, usePlatformData, useUpdateClient, useUpdateProjectType, useUpdateResponsible, useUpdateSettings } from "@/hooks/useProjectData";
+import { ResponsibleAvatar } from "@/components/project/ResponsibleAvatar";
+import { nextDefaultColor } from "@/lib/responsible-colors";
+import { ProjectType, Responsible, useCreateClient, useCreateProjectType, useCreateResponsible, useDeleteClient, useDeleteProjectType, useDeleteResponsible, usePlatformData, useResponsibles, useUpdateClient, useUpdateProjectType, useUpdateResponsible, useUpdateSettings } from "@/hooks/useProjectData";
 
 export function CreateClientDialog({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
