@@ -56,13 +56,14 @@ export default function Index() {
       })
       .filter(({ worst }) => statusFilter === "all" || worst === statusFilter)
       .sort((a, b) => {
-        if (sort === "alpha") return a.client.name.localeCompare(b.client.name);
-        if (sort === "alphaDesc") return b.client.name.localeCompare(a.client.name);
-        if (sort === "scoreAsc") return a.score - b.score;
-        if (sort === "scoreDesc") return b.score - a.score;
-        return statusMeta[b.worst].rank - statusMeta[a.worst].rank || a.client.name.localeCompare(b.client.name);
+        const dir = sortDir === "asc" ? 1 : -1;
+        if (sortKey === "alpha") return a.client.name.localeCompare(b.client.name) * dir;
+        if (sortKey === "score") return (a.score - b.score) * dir;
+        // critical: desc = mais críticos primeiro
+        const cmp = statusMeta[b.worst].rank - statusMeta[a.worst].rank;
+        return (sortDir === "desc" ? cmp : -cmp) || a.client.name.localeCompare(b.client.name);
       });
-  }, [clients.data, types, allRecords, config, search, statusFilter, sort, selectedTypeIds]);
+  }, [clients.data, types, allRecords, config, search, statusFilter, sortKey, sortDir, selectedTypeIds]);
 
   if (isLoading) return <PageSkeleton />;
   if (error || !config) return <EmptyState title="Não foi possível carregar os dados." />;
