@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { AlertTriangle, AlarmClock, Calendar, Clock, RotateCw } from "lucide-react";
+import { AlertTriangle, AlarmClock, Ban, CalendarClock, CheckCircle2, Clock, Minus, RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Client, ProjectRecord, ProjectType, Responsible, Settings } from "@/hooks/useProjectData";
 import { ResponsibleAvatar } from "@/components/project/ResponsibleAvatar";

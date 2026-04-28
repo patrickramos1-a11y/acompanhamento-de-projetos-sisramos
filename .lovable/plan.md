@@ -1,65 +1,75 @@
-## Avatar colorido por responsável
+## Refino visual dos chips e rodapé no ClientCard
 
-### 1. Banco de dados
+Todas as mudanças ficam em `src/components/project/ClientCard.tsx`. Sem migrações, sem novos componentes.
 
-Migração adicionando coluna `color` em `responsibles`:
-- `color text not null default '#3b82f6'`
-- Sem CHECK constraint (validação visual no front).
+### 1. Ícones únicos por status
 
-### 2. Paleta padrão
+Substituir o helper `chipIcon` para mapear cada status a um ícone distinto do `lucide-react`:
 
-Novo arquivo `src/lib/responsible-colors.ts` exportando:
-- `RESPONSIBLE_PALETTE`: array de 10 cores hex distintas
-  - azul `#3b82f6`, verde `#22c55e`, roxo `#8b5cf6`, laranja `#f97316`, rosa `#ec4899`, ciano `#06b6d4`, amarelo-escuro `#ca8a04`, vermelho-escuro `#b91c1c`, verde-água `#14b8a6`, lilás `#a78bfa`
-- `nextDefaultColor(existingColors: string[])`: retorna a primeira cor da paleta que ainda não foi usada; se todas foram usadas, retorna `RESPONSIBLE_PALETTE[existing.length % 10]`
-- `getInitial(name: string)`: primeira letra maiúscula do nome (com fallback `?`)
+- `ok` → `CheckCircle2`
+- `warning` → `Clock`
+- `overdue` → `AlertTriangle`
+- `late` → `AlarmClock`
+- `planned` → `CalendarClock`
+- `requested` → `RefreshCw`
+- `missing` → `Minus`
+- `na` → `Ban`
 
-### 3. Componente reutilizável `ResponsibleAvatar`
+Todos renderizados em `h-3 w-3` (a cor vem do `chipClass`, herdando `currentColor`). Imports atualizados para incluir `CheckCircle2`, `CalendarClock`, `RefreshCw`, `Minus`, `Ban` e remover `Calendar`/`RotateCw`.
 
-Novo `src/components/project/ResponsibleAvatar.tsx`:
-- Props: `name: string`, `color: string`, `size?: number` (default 18), `withTooltip?: boolean` (default true)
-- Render: `<span>` circular com `backgroundColor: color`, texto branco em negrito, tamanho do texto proporcional (`size * 0.55`)
-- Quando `withTooltip`, envolve em `Tooltip` mostrando o nome completo
+### 2. Conteúdo do chip (sem texto verbal de status)
 
-### 4. Configurar — aba Responsáveis (`src/pages/Configure.tsx`)
+Hoje há um `· atrasado` literal e nenhum dado de mês para late, e nada para warning. Ajustar a renderização interna do chip para:
 
-`CreateResponsibleDialog`:
-- Ao submeter, calcular `color = nextDefaultColor(responsibles.data.map(r => r.color))` e enviar junto com `name`
-- Necessita receber a lista de responsáveis existentes via prop ou ler via `useResponsibles()` dentro do componente
+- `ok`: mostrar `· {record.year}` quando houver
+- `warning`: mostrar `· {record.year}` quando houver (novo)
+- `overdue`: somente abreviação
+- `late`: mostrar `· {formatPlannedFor(planned_for)}` (substituindo o `· atrasado` atual)
+- `planned`: mostrar `· {formatPlannedFor(planned_for)}` (já existe)
+- `requested`, `missing`, `na`: somente abreviação
 
-`ResponsibleRow`:
-- Adicionar coluna de cor entre o nome e a contagem
-- Layout do grid: `[avatar_color_picker | input_nome | contagem | save | delete]`
-- Mostrar `ResponsibleAvatar` (24px) + `<input type="color" value={color} onChange={...}>` estilizado pequeno (≈28x28px, sem borda visual nativa)
-- Estado local `color`, marcar `dirty` se nome OU cor mudaram
-- Botão Salvar envia `{ name, color }` num único `update.mutate`
+O dado contextual continua com `opacity-80`. A abreviação fica em `<span class="truncate">` para nunca quebrar linha.
 
-### 5. Painel — chips com avatar (`src/components/project/ClientCard.tsx`)
+### 3. Estilo unificado dos chips + peso por criticidade
 
-- Adicionar prop `responsibles: Responsible[]`
-- Construir `responsibleMap: Map<string, Responsible>` no início
-- No render dos chips: para status `planned` ou `late` que tenham `record.responsible_id`, buscar o responsável e renderizar `<ResponsibleAvatar size={18} name={r.name} color={r.color} />` ao final do chip (margem-esquerda 4px)
-- Atualizar `Index.tsx` para passar `responsibles={responsibles.data ?? []}` ao `ClientCard`
+Reescrever `chipClass` para que todos os estilos usem **borda sólida** e cores explícitas, removendo o `border-dashed` de `missing` e `na`. As classes base do chip passam a ser fixas (height, padding, min-width, truncamento) e a borda crítica vira modificador:
 
-### 6. Detalhe do cliente — coluna Responsável (`src/pages/ClientDetail.tsx`)
+Classe base aplicada a todos os chips (substitui o atual `inline-flex h-7 ... px-2`):
 
-- Adicionar `responsibles` ao destructuring de `usePlatformData()`
-- Calcular `hasAnyResponsible = rows.some(r => r.record?.responsible_id)`
-- Se true, renderizar `<TableHead>Responsável</TableHead>` entre "Situação" e "Observações" e a célula correspondente em cada linha:
-  - Com responsável: `<ResponsibleAvatar size={24} name={r.name} color={r.color} withTooltip={false} />` + `<span class="text-sm">{r.name}</span>`
-  - Sem: `—`
-- Atualizar o `colSpan={5}` da linha "Registro ainda não criado" para `colSpan={6}` quando a coluna estiver visível
+```
+inline-flex items-center gap-1.5 rounded-md text-[11px] font-medium
+h-7 min-w-[48px] px-1.5 py-1 max-w-full
+```
 
-### 7. Tipos Supabase
+(`h-7` = 28px; `px-1.5` = 6px; `py-1` = 4px; `min-w-[48px]` = 48px.)
 
-`src/integrations/supabase/types.ts` é regenerado automaticamente após a migração — `Responsible.color` ficará disponível.
+`chipClass` por status (todas com `border` simples = 1px):
+
+- `overdue`: `bg-[#2b0d0d] border-[#4a1a1a] text-[#f5a3a3] border-2` (2px)
+- `late`: `bg-status-late/10 border-status-late/35 text-status-late border-2` (2px)
+- `warning`: `bg-[#2b1f0d] border-[#4a3515] text-[#f5d27a] border`
+- `ok`: `bg-[#0d2b1f] border-[#1a4a35] text-[#86e2b8] border`
+- `requested`: `bg-[#0d1a2b] border-[#1a3050] text-[#8cc4f5] border`
+- `planned`: `bg-status-planned/10 border-status-planned/35 text-status-planned border`
+- `missing`: `bg-[#1e1e2a] border-[#3a3a4a] text-muted-foreground border` (sólido, sem dashed)
+- `na`: `bg-transparent border-[#1f1f2a] text-muted-foreground/40 opacity-70 border` (sólido)
+
+Como `border-2` sobrescreve o `border` base apenas onde aplicado, mantemos 1px nos demais.
+
+A abreviação ganha `truncate`; o dado contextual fica `whitespace-nowrap` para não quebrar.
+
+### 4. Rodapé mais sutil
+
+No bloco de rodapé condicional:
+
+- Container: trocar `border-border/40` por `border-border/20` (linha mais discreta) e manter `pt-2.5`.
+- Cada `<p>` passa de `text-xs text-status-*` para `text-[11px] font-normal` com cores dessaturadas inline:
+  - urgente (overdue): `text-[#c45c5c]`
+  - atrasado (late): `text-[#c47a4a]` (laranja dessaturado, equivalente)
+  - vencendo (warning): `text-[#c4a85c]`
+
+Conteúdo dos textos permanece igual.
 
 ### Arquivos tocados
 
-- 1 migração SQL
-- `src/lib/responsible-colors.ts` (novo)
-- `src/components/project/ResponsibleAvatar.tsx` (novo)
-- `src/pages/Configure.tsx`
-- `src/components/project/ClientCard.tsx`
-- `src/pages/Index.tsx` (passar prop `responsibles`)
-- `src/pages/ClientDetail.tsx`
+- `src/components/project/ClientCard.tsx` (único arquivo modificado)
