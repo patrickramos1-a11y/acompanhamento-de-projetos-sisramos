@@ -194,11 +194,16 @@ export function ClientCard({ client, types, records, settings }: Props) {
       </div>
 
       {/* Rodapé condicional */}
-      {(hasOverdue || hasWarning) && (
+      {(hasOverdue || hasLate || hasWarning) && (
         <div className="flex flex-col gap-1 border-t border-border/40 pt-2.5">
           {hasOverdue && (
             <p className="text-xs text-status-overdue">
               Renovação urgente: {overdueAbbrs.join(", ")}
+            </p>
+          )}
+          {hasLate && (
+            <p className="text-xs text-status-late">
+              Atrasado: {lateAbbrs.join(", ")}
             </p>
           )}
           {hasWarning && (
