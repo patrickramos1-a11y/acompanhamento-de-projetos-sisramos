@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { StatusKey, statusMeta } from "@/lib/status";
 
@@ -19,7 +20,7 @@ export function ComplianceBar({ value }: { value: number }) {
   );
 }
 
-export function EmptyState({ title, action }: { title: string; action?: React.ReactNode }) {
+export function EmptyState({ title, action }: { title: string; action?: ReactNode }) {
   return (
     <div className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card/40 p-8 text-center">
       <p className="text-sm text-muted-foreground">{title}</p>

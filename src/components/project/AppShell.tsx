@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { BarChart3, ClipboardList, Gauge, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ const nav = [
   { to: "/configurar", label: "Configurar", icon: Settings },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[240px_1fr]">
       <aside className="border-b border-border bg-sidebar lg:min-h-screen lg:border-b-0 lg:border-r">

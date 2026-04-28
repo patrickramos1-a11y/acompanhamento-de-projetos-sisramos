@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -13,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
 import { ProjectType, useCreateClient, useCreateProjectType, useDeleteClient, useDeleteProjectType, usePlatformData, useUpdateClient, useUpdateProjectType, useUpdateSettings } from "@/hooks/useProjectData";
 
-export function CreateClientDialog({ trigger }: { trigger: React.ReactNode }) {
+export function CreateClientDialog({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");

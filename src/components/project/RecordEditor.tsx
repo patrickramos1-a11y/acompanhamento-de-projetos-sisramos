@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { FormEvent, useState } from "react";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ProjectRecord, useUpdateProjectRecord } from "@/hooks/useProjectData";
 
-export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigger?: React.ReactNode }) {
+export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigger?: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [year, setYear] = useState(record.year?.toString() ?? "");
   const [requested, setRequested] = useState(record.requested);

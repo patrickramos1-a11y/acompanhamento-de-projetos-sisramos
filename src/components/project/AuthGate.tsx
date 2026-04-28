@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { FormEvent, useState } from "react";
 import { Loader2, Mail, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -8,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
 
-export function AuthGate({ children }: { children: React.ReactNode }) {
+export function AuthGate({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
