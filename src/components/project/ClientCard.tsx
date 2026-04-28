@@ -107,7 +107,15 @@ export function ClientCard({ client, types, records, settings }: Props) {
       {/* Cabeçalho */}
       <div className="flex flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="min-w-0 flex-1 truncate text-lg font-bold tracking-tight">{client.name}</h2>
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <div
+              aria-hidden
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/60 bg-muted/30 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              {client.name.slice(0, 2)}
+            </div>
+            <h2 className="min-w-0 flex-1 truncate text-lg font-bold tracking-tight">{client.name}</h2>
+          </div>
           <span className={cn("text-lg font-bold tabular-nums", scoreTone(score))}>{score}%</span>
         </div>
         <div className="text-xs">
