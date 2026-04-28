@@ -84,14 +84,14 @@ export default function Metrics() {
             </ul>
           </div>
         </div>
-        <div className="rounded-lg border bg-card p-4">
-          <h2 className="mb-4 text-sm font-medium">Conformidade por cliente</h2>
+        <div className="self-start rounded-lg border bg-card p-4">
+          <h2 className="mb-2 text-sm font-medium">Conformidade por cliente</h2>
           <div className="max-h-[600px] overflow-y-auto">
             <ResponsiveContainer width="100%" height={compliance.length * 44 + 40}>
-              <BarChart data={compliance} layout="vertical" margin={{ top: 0, right: 60, left: 60, bottom: 0 }} barCategoryGap={6}>
+              <BarChart data={compliance} layout="vertical" margin={{ top: 0, right: 48, left: 8, bottom: 0 }} barCategoryGap={6}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
                 <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} interval={0} />
+                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} interval={0} />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                   contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }}
