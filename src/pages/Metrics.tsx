@@ -56,7 +56,34 @@ export default function Metrics() {
     <main className="space-y-5">
       <header><h1 className="text-2xl font-semibold tracking-normal">Métricas</h1><p className="text-sm text-muted-foreground">Visão consolidada de status, conformidade e pendências.</p></header>
       <section className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-lg border bg-card p-4"><h2 className="mb-4 text-sm font-medium">Distribuição global</h2><div className="h-72"><ResponsiveContainer><PieChart><Pie data={distribution} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96}>{distribution.map((entry) => <Cell key={entry.status} fill={chartColor[entry.status]} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer></div></div>
+        <div className="rounded-lg border bg-card p-4">
+          <h2 className="mb-4 text-sm font-medium">Distribuição global</h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="h-72 flex-1">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={distribution} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96}>
+                    {distribution.map((entry) => <Cell key={entry.status} fill={chartColor[entry.status]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <ul className="flex flex-col gap-2 sm:w-44">
+              {distribution.map((entry) => {
+                const total = distribution.reduce((sum, item) => sum + item.value, 0);
+                const pct = total ? Math.round((entry.value / total) * 100) : 0;
+                return (
+                  <li key={entry.status} className="flex items-center gap-2 text-xs">
+                    <span className="h-3 w-3 rounded-sm" style={{ background: chartColor[entry.status] }} />
+                    <span className="flex-1 text-foreground">{entry.name}</span>
+                    <span className="text-muted-foreground">{entry.value} · {pct}%</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
         <div className="rounded-lg border bg-card p-4">
           <h2 className="mb-4 text-sm font-medium">Conformidade por cliente</h2>
           <div className="max-h-[600px] overflow-y-auto" style={{ height: Math.min(600, Math.max(400, compliance.length * 36 + 40)) }}>
