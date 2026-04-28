@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ProjectRecord, useUpdateProjectRecord } from "@/hooks/useProjectData";
+import { ProjectRecord, useResponsibles, useUpdateProjectRecord } from "@/hooks/useProjectData";
 import { cn } from "@/lib/utils";
 
 const months = [
@@ -42,8 +42,11 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
   const initialPlanned = parsePlanned((record as any).planned_for ?? null);
   const [plannedMonth, setPlannedMonth] = useState(initialPlanned.month);
   const [plannedYear, setPlannedYear] = useState(initialPlanned.year);
+  const [responsibleId, setResponsibleId] = useState<string>(((record as any).responsible_id ?? "none") as string);
   const [error, setError] = useState<string | null>(null);
   const updateRecord = useUpdateProjectRecord();
+  const responsiblesQuery = useResponsibles();
+  const responsibles = (responsiblesQuery.data ?? []).slice().sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
 
   // Reset when reopening with a different record
   useEffect(() => {
@@ -55,6 +58,7 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
       const p = parsePlanned((record as any).planned_for ?? null);
       setPlannedMonth(p.month);
       setPlannedYear(p.year);
+      setResponsibleId(((record as any).responsible_id ?? "none") as string);
       setError(null);
     }
   }, [open, record]);
@@ -120,6 +124,7 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
       return;
     }
     const plannedFor = planned && plannedMonth && plannedYear ? `${plannedYear}-${plannedMonth}-01` : null;
+    const finalResponsible = !notApplicable && planned && responsibleId !== "none" ? responsibleId : null;
     await updateRecord.mutateAsync({
       id: record.id,
       values: {
@@ -129,6 +134,7 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
         not_applicable: notApplicable,
         planned: notApplicable ? false : planned,
         planned_for: notApplicable ? null : plannedFor,
+        responsible_id: finalResponsible,
       } as any,
     });
     setOpen(false);
@@ -180,19 +186,31 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
                 <Switch checked={planned} onCheckedChange={handlePlanned} disabled={notApplicable} />
               </div>
               {planned && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Previsão de entrega</Label>
-                  <div className="flex gap-2">
-                    <Select value={plannedMonth} onValueChange={setPlannedMonth} disabled={notApplicable}>
-                      <SelectTrigger className="flex-1"><SelectValue placeholder="Mês" /></SelectTrigger>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Previsão de entrega</Label>
+                    <div className="flex gap-2">
+                      <Select value={plannedMonth} onValueChange={setPlannedMonth} disabled={notApplicable}>
+                        <SelectTrigger className="flex-1"><SelectValue placeholder="Mês" /></SelectTrigger>
+                        <SelectContent>
+                          {months.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Select value={plannedYear} onValueChange={setPlannedYear} disabled={notApplicable}>
+                        <SelectTrigger className="w-28"><SelectValue placeholder="Ano" /></SelectTrigger>
+                        <SelectContent>
+                          {yearOptions.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Responsável</Label>
+                    <Select value={responsibleId} onValueChange={setResponsibleId} disabled={notApplicable}>
+                      <SelectTrigger><SelectValue placeholder="Sem responsável" /></SelectTrigger>
                       <SelectContent>
-                        {months.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Select value={plannedYear} onValueChange={setPlannedYear} disabled={notApplicable}>
-                      <SelectTrigger className="w-28"><SelectValue placeholder="Ano" /></SelectTrigger>
-                      <SelectContent>
-                        {yearOptions.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                        <SelectItem value="none">Sem responsável</SelectItem>
+                        {responsibles.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
