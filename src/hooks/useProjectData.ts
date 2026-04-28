@@ -7,6 +7,7 @@ export type Client = Tables<"clients">;
 export type ProjectType = Tables<"project_types">;
 export type ProjectRecord = Tables<"project_records">;
 export type Settings = Tables<"settings">;
+export type Responsible = Tables<"responsibles">;
 
 export type RecordWithRelations = ProjectRecord & {
   clients: Client | null;
@@ -18,6 +19,7 @@ const keys = {
   types: ["project-types"] as const,
   records: ["project-records"] as const,
   settings: ["settings"] as const,
+  responsibles: ["responsibles"] as const,
 };
 
 function humanError(error: unknown) {
@@ -74,18 +76,36 @@ export function useSettings() {
   });
 }
 
+export function useResponsibles() {
+  return useQuery({
+    queryKey: keys.responsibles,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("responsibles").select("*").order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
 export function usePlatformData(includeInactiveTypes = false) {
   const clients = useClients();
   const projectTypes = useProjectTypes(includeInactiveTypes);
   const records = useProjectRecords();
   const settings = useSettings();
+  const responsibles = useResponsibles();
   return {
     clients,
     projectTypes,
     records,
     settings,
-    isLoading: clients.isLoading || projectTypes.isLoading || records.isLoading || settings.isLoading,
-    error: clients.error || projectTypes.error || records.error || settings.error,
+    responsibles,
+    isLoading:
+      clients.isLoading ||
+      projectTypes.isLoading ||
+      records.isLoading ||
+      settings.isLoading ||
+      responsibles.isLoading,
+    error: clients.error || projectTypes.error || records.error || settings.error || responsibles.error,
   };
 }
 
@@ -94,6 +114,53 @@ function invalidateAll(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: keys.types });
   queryClient.invalidateQueries({ queryKey: keys.records });
   queryClient.invalidateQueries({ queryKey: keys.settings });
+  queryClient.invalidateQueries({ queryKey: keys.responsibles });
+}
+
+export function useCreateResponsible() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: TablesInsert<"responsibles">) => {
+      const { data, error } = await supabase.from("responsibles").insert(input).select("*").single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      invalidateAll(queryClient);
+      toast.success("Responsável cadastrado.");
+    },
+    onError: (error) => toast.error(humanError(error)),
+  });
+}
+
+export function useUpdateResponsible() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, values }: { id: string; values: TablesUpdate<"responsibles"> }) => {
+      const { error } = await supabase.from("responsibles").update(values).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateAll(queryClient);
+      toast.success("Responsável atualizado.");
+    },
+    onError: (error) => toast.error(humanError(error)),
+  });
+}
+
+export function useDeleteResponsible() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("responsibles").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateAll(queryClient);
+      toast.success("Responsável excluído.");
+    },
+    onError: (error) => toast.error(humanError(error)),
+  });
 }
 
 export function useCreateClient() {
