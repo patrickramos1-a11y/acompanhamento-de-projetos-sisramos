@@ -292,7 +292,7 @@ export default function Index() {
                   >
                     <div
                       className={cn(
-                        "mr-2 flex h-4 w-4 items-center justify-center rounded-full border",
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded border",
                         responsibleFilter === "all"
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-muted-foreground/40",
@@ -315,7 +315,7 @@ export default function Index() {
                       >
                         <div
                           className={cn(
-                            "mr-2 flex h-4 w-4 items-center justify-center rounded-full border",
+                            "mr-2 flex h-4 w-4 items-center justify-center rounded border",
                             checked
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-muted-foreground/40",
