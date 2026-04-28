@@ -59,10 +59,10 @@ export default function Metrics() {
         <div className="rounded-lg border bg-card p-4">
           <h2 className="mb-4 text-sm font-medium">Distribuição global</h2>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="h-72 flex-1">
-              <ResponsiveContainer>
+            <div className="flex-1" style={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={distribution} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96}>
+                  <Pie data={distribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={62} outerRadius={96}>
                     {distribution.map((entry) => <Cell key={entry.status} fill={chartColor[entry.status]} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }} />
@@ -86,10 +86,9 @@ export default function Metrics() {
         </div>
         <div className="rounded-lg border bg-card p-4">
           <h2 className="mb-4 text-sm font-medium">Conformidade por cliente</h2>
-          <div className="max-h-[600px] overflow-y-auto" style={{ height: Math.min(600, Math.max(400, compliance.length * 36 + 40)) }}>
-            <div style={{ height: Math.max(400, compliance.length * 36) }}>
-              <ResponsiveContainer>
-                <BarChart data={compliance} layout="vertical" margin={{ left: 8, right: 48, top: 8, bottom: 8 }} barCategoryGap={6}>
+          <div className="max-h-[600px] overflow-y-auto">
+            <ResponsiveContainer width="100%" height={Math.max(200, compliance.length * 44)}>
+              <BarChart data={compliance} layout="vertical" margin={{ left: 8, right: 48, top: 8, bottom: 8 }} barCategoryGap={6}>
                   <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
                   <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
                   <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} interval={0} />
