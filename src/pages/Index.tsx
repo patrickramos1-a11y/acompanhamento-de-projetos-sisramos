@@ -71,6 +71,7 @@ export default function Index() {
 
   const total = clients.data?.length ?? 0;
   const critical = rows.filter((row) => row.worst === "overdue").length;
+  const late = rows.filter((row) => row.worst === "late").length;
   const warning = rows.filter((row) => row.worst === "warning").length;
   const avg = rows.length ? Math.round(rows.reduce((sum, row) => sum + row.score, 0) / rows.length) : 0;
 
@@ -84,8 +85,8 @@ export default function Index() {
         <CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} />
       </header>
 
-      <section className="grid gap-3 md:grid-cols-4">
-        {[['Clientes', total], ['Defasados', critical], ['Em atenção', warning], ['Conformidade média', `${avg}%`]].map(([label, value]) => (
+      <section className="grid gap-3 md:grid-cols-5">
+        {[['Clientes', total], ['Defasados', critical], ['Atrasados', late], ['Em atenção', warning], ['Conformidade média', `${avg}%`]].map(([label, value]) => (
           <div key={label} className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">{label}</p>
             <p className="mt-2 text-2xl font-semibold">{value}</p>
