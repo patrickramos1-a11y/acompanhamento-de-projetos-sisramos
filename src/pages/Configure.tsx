@@ -1,9 +1,6 @@
 import type { ReactNode } from "react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, Check, Clock, GripVertical, Plus, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, Clock, Plus, Save, Trash2 } from "lucide-react";
 import { computeStatus, statusMeta, type StatusKey } from "@/lib/status";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -73,18 +70,19 @@ function CreateProjectTypeDialog({ nextOrder }: { nextOrder: number }) {
   );
 }
 
-function SortableTypeRow({ type }: { type: ProjectType }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: type.id });
+function TypeRow({ type }: { type: ProjectType }) {
   const updateType = useUpdateProjectType();
   const deleteType = useDeleteProjectType();
   const [name, setName] = useState(type.name);
   const [abbr, setAbbr] = useState(type.abbreviation);
 
-  const style = { transform: CSS.Transform.toString(transform), transition };
+  useEffect(() => {
+    setName(type.name);
+    setAbbr(type.abbreviation);
+  }, [type.name, type.abbreviation]);
 
   return (
-    <div ref={setNodeRef} style={style} className="grid gap-2 rounded-lg border bg-card p-3 sm:grid-cols-[auto_1fr_120px_auto_auto] sm:items-center">
-      <button className="text-muted-foreground" {...attributes} {...listeners} type="button"><GripVertical className="h-4 w-4" /></button>
+    <div className="grid gap-2 rounded-lg border bg-card p-3 sm:grid-cols-[1fr_120px_auto_auto] sm:items-center">
       <Input value={name} onChange={(e) => setName(e.target.value)} />
       <Input value={abbr} onChange={(e) => setAbbr(e.target.value.toUpperCase())} />
       <Switch checked={type.is_active} onCheckedChange={(checked) => updateType.mutate({ id: type.id, values: { is_active: checked } })} />
@@ -141,14 +139,11 @@ export default function Configure() {
   const { clients, projectTypes, settings, isLoading } = usePlatformData(true);
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
-  const updateType = useUpdateProjectType();
   const updateSettings = useUpdateSettings();
-  const [orderedTypes, setOrderedTypes] = useState<ProjectType[]>([]);
   const [validity, setValidity] = useState(5);
   const [warning, setWarning] = useState(1);
   const [confirmCode, setConfirmCode] = useState("");
 
-  useEffect(() => setOrderedTypes(projectTypes.data ?? []), [projectTypes.data]);
   useEffect(() => {
     if (settings.data) {
       setValidity(settings.data.validity_years);
@@ -156,17 +151,15 @@ export default function Configure() {
     }
   }, [settings.data]);
 
+  const sortedTypes = useMemo(
+    () => [...(projectTypes.data ?? [])].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+    [projectTypes.data],
+  );
+  const sortedClients = useMemo(
+    () => [...(clients.data ?? [])].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+    [clients.data],
+  );
   const nextOrder = useMemo(() => (projectTypes.data?.length ?? 0) + 1, [projectTypes.data]);
-
-  async function onDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = orderedTypes.findIndex((type) => type.id === active.id);
-    const newIndex = orderedTypes.findIndex((type) => type.id === over.id);
-    const next = arrayMove(orderedTypes, oldIndex, newIndex);
-    setOrderedTypes(next);
-    await Promise.all(next.map((type, index) => updateType.mutateAsync({ id: type.id, values: { display_order: index + 1 } })));
-  }
 
   if (isLoading) return <PageSkeleton />;
 
@@ -180,7 +173,7 @@ export default function Configure() {
         <TabsList><TabsTrigger value="clients">Clientes</TabsTrigger><TabsTrigger value="types">Tipos</TabsTrigger><TabsTrigger value="settings">Gerais</TabsTrigger></TabsList>
         <TabsContent value="clients" className="mt-4 space-y-3">
           <div className="flex justify-end"><CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} /></div>
-          {clients.data?.length ? clients.data.map((client) => (
+          {sortedClients.length ? sortedClients.map((client) => (
             <ClientRow
               key={client.id}
               client={client}
@@ -193,12 +186,8 @@ export default function Configure() {
         </TabsContent>
         <TabsContent value="types" className="mt-4 space-y-3">
           <div className="flex justify-end"><CreateProjectTypeDialog nextOrder={nextOrder} /></div>
-          {orderedTypes.length ? (
-            <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-              <SortableContext items={orderedTypes.map((type) => type.id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2">{orderedTypes.map((type) => <SortableTypeRow key={type.id} type={type} />)}</div>
-              </SortableContext>
-            </DndContext>
+          {sortedTypes.length ? (
+            <div className="space-y-2">{sortedTypes.map((type) => <TypeRow key={type.id} type={type} />)}</div>
           ) : <EmptyState title="Nenhum tipo de projeto cadastrado." />}
         </TabsContent>
         <TabsContent value="settings" className="mt-4 max-w-2xl space-y-5 rounded-lg border bg-card p-4">
