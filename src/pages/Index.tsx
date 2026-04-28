@@ -55,7 +55,7 @@ export default function Index() {
         }
         return true;
       })
-      .filter(({ worst }) => statusFilter === "all" || worst === statusFilter)
+      .filter(({ worst }) => statusFilters.length === 0 || statusFilters.includes(worst))
       .sort((a, b) => {
         const dir = sortDir === "asc" ? 1 : -1;
         if (sortKey === "alpha") return a.client.name.localeCompare(b.client.name) * dir;
@@ -64,7 +64,7 @@ export default function Index() {
         const cmp = statusMeta[b.worst].rank - statusMeta[a.worst].rank;
         return (sortDir === "desc" ? cmp : -cmp) || a.client.name.localeCompare(b.client.name);
       });
-  }, [clients.data, types, allRecords, config, search, statusFilter, sortKey, sortDir, selectedTypeIds]);
+  }, [clients.data, types, allRecords, config, search, statusFilters, sortKey, sortDir, selectedTypeIds]);
 
   if (isLoading) return <PageSkeleton />;
   if (error || !config) return <EmptyState title="Não foi possível carregar os dados." />;
