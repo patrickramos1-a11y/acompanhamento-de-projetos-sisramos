@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { BarChart3, Gauge, LogOut, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { BarChart3, Gauge, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
