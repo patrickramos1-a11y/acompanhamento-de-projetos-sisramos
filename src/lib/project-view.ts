@@ -13,6 +13,6 @@ export function statusForClient(client: Client, types: ProjectType[], records: P
 }
 
 export function sortByCriticality(a: StatusKey, b: StatusKey) {
-  const order: Record<StatusKey, number> = { overdue: 5, warning: 4, missing: 3, requested: 2, ok: 1 };
-  return order[b] - order[a];
+  return statusMeta[b].rank - statusMeta[a].rank;
 }
+
