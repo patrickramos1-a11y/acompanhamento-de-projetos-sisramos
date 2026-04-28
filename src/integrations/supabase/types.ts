@@ -16,7 +16,7 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
-          code: string
+          code: string | null
           created_at: string
           id: string
           name: string
@@ -24,7 +24,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          code: string
+          code?: string | null
           created_at?: string
           id?: string
           name: string
@@ -32,7 +32,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          code?: string
+          code?: string | null
           created_at?: string
           id?: string
           name?: string
