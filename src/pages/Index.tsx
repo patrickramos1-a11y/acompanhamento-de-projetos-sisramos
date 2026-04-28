@@ -264,6 +264,17 @@ export default function Index() {
             </Command>
           </PopoverContent>
         </Popover>
+        <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
+          <SelectTrigger className="w-full lg:w-56">
+            <SelectValue placeholder="Filtrar por responsável" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os responsáveis</SelectItem>
+            {sortedResponsibles.map((r) => (
+              <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </section>
 
       {total === 0 ? (
@@ -273,7 +284,14 @@ export default function Index() {
       ) : (
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {rows.map(({ client }) => (
-            <ClientCard key={client.id} client={client} types={types} records={recordsForClient(allRecords, client.id)} settings={config} />
+            <ClientCard
+              key={client.id}
+              client={client}
+              types={types}
+              records={recordsForClient(allRecords, client.id)}
+              settings={config}
+              highlightResponsibleId={responsibleFilter !== "all" ? responsibleFilter : null}
+            />
           ))}
         </section>
       )}
