@@ -32,7 +32,7 @@ export default function ClientDetail() {
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
           <div>
             <h1 className="text-2xl font-semibold tracking-normal">{client.name}</h1>
-            <p className="text-sm text-muted-foreground">{client.code}{client.responsible ? ` · ${client.responsible}` : ""}</p>
+            {client.code ? <p className="text-sm text-muted-foreground">{client.code}</p> : null}
           </div>
           <div className="w-full md:w-64">
             <div className="mb-2 flex justify-between text-sm"><span>Conformidade</span><strong>{score}%</strong></div>

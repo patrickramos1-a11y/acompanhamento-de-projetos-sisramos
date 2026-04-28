@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ALTER COLUMN code DROP NOT NULL;

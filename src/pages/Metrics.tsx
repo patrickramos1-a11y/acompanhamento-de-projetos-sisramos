@@ -21,7 +21,7 @@ export default function Metrics() {
   const activeTypes = projectTypes.data ?? [];
   const allRecords = (records.data ?? []).filter((record) => record.project_types?.is_active);
   const distribution = statusOrder.map((status) => ({ name: statusMeta[status].label, status, value: allRecords.filter((record) => computeStatus(record, config) === status).length })).filter((item) => item.value > 0);
-  const compliance = (clients.data ?? []).map((client) => ({ name: client.code, conformidade: statusForClient(client, activeTypes, allRecords, config).score })).sort((a, b) => a.conformidade - b.conformidade);
+  const compliance = (clients.data ?? []).map((client) => ({ name: client.code ?? client.name, conformidade: statusForClient(client, activeTypes, allRecords, config).score })).sort((a, b) => a.conformidade - b.conformidade);
   const byType = activeTypes.map((type) => {
     const typeRecords = allRecords.filter((record) => record.project_type_id === type.id);
     return statusOrder.reduce<Record<string, string | number>>((acc, status) => ({ ...acc, [statusMeta[status].label]: typeRecords.filter((record) => computeStatus(record, config) === status).length }), { name: type.abbreviation });
