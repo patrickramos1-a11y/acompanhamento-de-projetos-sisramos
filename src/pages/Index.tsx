@@ -61,10 +61,10 @@ export default function Index() {
           const hasAny = clientRecords.some((r) => selectedTypeIds.includes(r.project_type_id));
           if (!hasAny) return false;
         }
-        if (responsibleFilter !== "all") {
+        if (responsibleFilters.length > 0) {
           const clientRecords = recordsForClient(allRecords, client.id);
           const hasAny = clientRecords.some(
-            (r) => (r as any).planned === true && (r as any).responsible_id === responsibleFilter,
+            (r) => (r as any).planned === true && responsibleFilters.includes((r as any).responsible_id),
           );
           if (!hasAny) return false;
         }
