@@ -91,7 +91,7 @@ export default function Metrics() {
               <BarChart data={compliance} layout="vertical" margin={{ top: 0, right: 48, left: 8, bottom: 0 }} barCategoryGap={6}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
                 <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} interval={0} />
+                <YAxis dataKey="name" type="category" width={Math.min(140, Math.max(40, (compliance.reduce((m, c) => Math.max(m, c.name.length), 0) * 7) + 12))} tick={{ fontSize: 11 }} interval={0} />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                   contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }}
