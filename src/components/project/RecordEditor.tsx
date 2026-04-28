@@ -146,7 +146,7 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger ?? <Button variant="outline" size="sm">Editar</Button>}</PopoverTrigger>
-      <PopoverContent align="end" className="w-96">
+      <PopoverContent align="end" className="w-96 max-h-[80vh] overflow-y-auto">
         <form className="space-y-4" onSubmit={submit}>
           {/* Não aplicável */}
           <div className={cn(
