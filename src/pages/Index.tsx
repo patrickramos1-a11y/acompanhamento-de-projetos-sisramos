@@ -97,24 +97,27 @@ export default function Index() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-9" placeholder="Buscar por cliente, sigla ou responsável" value={search} onChange={(event) => setSearch(event.target.value)} />
         </div>
-        <div className="flex w-full gap-2 lg:w-auto">
+        <div className="flex w-full items-stretch lg:w-64">
+          <button
+            type="button"
+            aria-label={sortDir === "desc" ? "Maior para menor" : "Menor para maior"}
+            title={sortDir === "desc" ? "Maior para menor" : "Menor para maior"}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+            }}
+            className="flex items-center justify-center rounded-l-md border border-r-0 border-input bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            {sortDir === "desc" ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
+          </button>
           <Select value={sortKey} onValueChange={(value) => setSortKey(value as SortKey)}>
-            <SelectTrigger className="w-full lg:w-56"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="flex-1 rounded-l-none"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="critical">Criticidade</SelectItem>
               <SelectItem value="alpha">Alfabética</SelectItem>
               <SelectItem value="score">Conformidade</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label={sortDir === "desc" ? "Maior para menor" : "Menor para maior"}
-            title={sortDir === "desc" ? "Maior para menor" : "Menor para maior"}
-            onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
-          >
-            {sortDir === "desc" ? <ArrowDown className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
-          </Button>
         </div>
         <Popover open={typeFilterOpen} onOpenChange={setTypeFilterOpen}>
           <PopoverTrigger asChild>
