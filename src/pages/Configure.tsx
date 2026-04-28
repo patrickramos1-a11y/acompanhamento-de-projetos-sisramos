@@ -169,14 +169,12 @@ export default function Configure() {
             </DndContext>
           ) : <EmptyState title="Nenhum tipo de projeto cadastrado." />}
         </TabsContent>
-        <TabsContent value="settings" className="mt-4 max-w-xl space-y-4 rounded-lg border bg-card p-4">
-          <div className="space-y-2"><Label>Validade padrão em anos</Label><Input type="number" value={validity} onChange={(e) => setValidity(Number(e.target.value))} /></div>
-          <div className="space-y-2"><Label>Antecedência do alerta em anos</Label><Input type="number" value={warning} onChange={(e) => setWarning(Number(e.target.value))} /></div>
-          <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-md border border-status-ok/30 bg-status-ok/10 p-3 text-status-ok">OK</div>
-            <div className="rounded-md border border-status-warning/30 bg-status-warning/10 p-3 text-status-warning">Atenção: {warning} ano(s)</div>
-            <div className="rounded-md border border-status-overdue/30 bg-status-overdue/10 p-3 text-status-overdue">Defasado após {validity} ano(s)</div>
+        <TabsContent value="settings" className="mt-4 max-w-2xl space-y-5 rounded-lg border bg-card p-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2"><Label>Validade padrão em anos</Label><Input type="number" min={1} value={validity} onChange={(e) => setValidity(Number(e.target.value))} /></div>
+            <div className="space-y-2"><Label>Antecedência do alerta em anos</Label><Input type="number" min={0} value={warning} onChange={(e) => setWarning(Number(e.target.value))} /></div>
           </div>
+          <ValidityPreview validity={validity} warning={warning} />
           <Button onClick={() => updateSettings.mutate({ validity_years: validity, warning_years: warning })}><Save className="h-4 w-4" />Salvar</Button>
         </TabsContent>
       </Tabs>
