@@ -102,6 +102,41 @@ function SortableTypeRow({ type }: { type: ProjectType }) {
   );
 }
 
+function ClientRow({
+  client,
+  onSave,
+  onDelete,
+  confirmCode,
+  setConfirmCode,
+}: {
+  client: { id: string; name: string };
+  onSave: (name: string) => void;
+  onDelete: () => void;
+  confirmCode: string;
+  setConfirmCode: (v: string) => void;
+}) {
+  const [name, setName] = useState(client.name);
+  useEffect(() => setName(client.name), [client.name]);
+  const dirty = name.trim().length > 0 && name !== client.name;
+
+  return (
+    <div className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-[1fr_auto_auto] md:items-center">
+      <Input value={name} onChange={(e) => setName(e.target.value)} />
+      <Button size="icon" variant="outline" disabled={!dirty} onClick={() => onSave(name.trim())} title="Salvar alterações">
+        <Save className="h-4 w-4" />
+      </Button>
+      <AlertDialog onOpenChange={() => setConfirmCode("")}>
+        <AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>Excluir {client.name}?</AlertDialogTitle><AlertDialogDescription>Digite o nome exato para confirmar a exclusão do cliente.</AlertDialogDescription></AlertDialogHeader>
+          <Input value={confirmCode} onChange={(e) => setConfirmCode(e.target.value)} />
+          <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction disabled={confirmCode !== client.name} onClick={onDelete}>Excluir</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
 export default function Configure() {
   const { clients, projectTypes, settings, isLoading } = usePlatformData(true);
   const updateClient = useUpdateClient();
