@@ -41,10 +41,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
           </nav>
-          <Button className="hidden lg:flex" variant="ghost" onClick={() => supabase.auth.signOut()}>
-            <LogOut className="h-4 w-4" />
-            Sair
-          </Button>
         </div>
       </aside>
       <div className="min-w-0 px-4 py-5 sm:px-6 lg:px-8">{children}</div>
