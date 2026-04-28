@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RecordEditor } from "@/components/project/RecordEditor";
+import { ResponsibleAvatar } from "@/components/project/ResponsibleAvatar";
 import { ComplianceBar, EmptyState, PageSkeleton, StatusBadge } from "@/components/project/status-ui";
 import { usePlatformData } from "@/hooks/useProjectData";
 import { computeStatus, statusDistance, statusMeta, validUntil } from "@/lib/status";
@@ -11,7 +12,7 @@ import { sortByCriticality } from "@/lib/project-view";
 
 export default function ClientDetail() {
   const { id } = useParams();
-  const { clients, projectTypes, records, settings, isLoading } = usePlatformData();
+  const { clients, projectTypes, records, settings, responsibles, isLoading } = usePlatformData();
 
   if (isLoading) return <PageSkeleton />;
   const client = clients.data?.find((item) => item.id === id);
@@ -19,11 +20,14 @@ export default function ClientDetail() {
   if (!client || !config) return <EmptyState title="Cliente não encontrado." action={<Button asChild><Link to="/">Voltar ao painel</Link></Button>} />;
 
   const types = projectTypes.data ?? [];
+  const responsibleMap = new Map((responsibles.data ?? []).map((r) => [r.id, r]));
   const byType = new Map((records.data ?? []).filter((record) => record.client_id === client.id).map((record) => [record.project_type_id, record]));
   const rows = types
     .map((type) => ({ type, record: byType.get(type.id), status: computeStatus(byType.get(type.id) ?? { year: null, requested: false }, config) }))
     .sort((a, b) => sortByCriticality(a.status, b.status));
   const score = complianceScore(rows.map((row) => row.status));
+  const hasAnyResponsible = rows.some((r) => r.record && (r.record as any).responsible_id);
+  const missingColSpan = hasAnyResponsible ? 6 : 5;
 
   return (
     <main className="space-y-5">
@@ -43,7 +47,16 @@ export default function ClientDetail() {
       <section className="overflow-hidden rounded-lg border bg-card">
         <Table>
           <TableHeader>
-            <TableRow><TableHead>Tipo</TableHead><TableHead>Status</TableHead><TableHead>Ano</TableHead><TableHead>Válido até</TableHead><TableHead>Situação</TableHead><TableHead>Observações</TableHead><TableHead className="text-right">Ações</TableHead></TableRow>
+            <TableRow>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Ano</TableHead>
+              <TableHead>Válido até</TableHead>
+              <TableHead>Situação</TableHead>
+              {hasAnyResponsible ? <TableHead>Responsável</TableHead> : null}
+              <TableHead>Observações</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map(({ type, record, status }) => record ? (
@@ -53,12 +66,27 @@ export default function ClientDetail() {
                 <TableCell>{record.year ?? "—"}</TableCell>
                 <TableCell>{validUntil(record.year, config) ?? "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{statusDistance(record, config)}</TableCell>
+                {hasAnyResponsible ? (
+                  <TableCell>
+                    {(() => {
+                      const rid = (record as any).responsible_id as string | null;
+                      const r = rid ? responsibleMap.get(rid) : undefined;
+                      if (!r) return <span className="text-muted-foreground">—</span>;
+                      return (
+                        <div className="flex items-center gap-2">
+                          <ResponsibleAvatar name={r.name} color={(r as any).color ?? "#3b82f6"} size={24} withTooltip={false} />
+                          <span className="text-sm">{r.name}</span>
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
+                ) : null}
                 <TableCell className="max-w-xs truncate">{record.notes ?? "—"}</TableCell>
                 <TableCell className="text-right"><RecordEditor record={record} /></TableCell>
               </TableRow>
             ) : (
               <TableRow key={type.id}>
-                <TableCell>{type.name}</TableCell><TableCell><span className={statusMeta.missing.className}>Falta</span></TableCell><TableCell colSpan={5}>Registro ainda não criado.</TableCell>
+                <TableCell>{type.name}</TableCell><TableCell><span className={statusMeta.missing.className}>Falta</span></TableCell><TableCell colSpan={missingColSpan}>Registro ainda não criado.</TableCell>
               </TableRow>
             ))}
           </TableBody>
