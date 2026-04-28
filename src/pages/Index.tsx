@@ -16,7 +16,8 @@ import { cn } from "@/lib/utils";
 
 const filters: (StatusKey | "all")[] = ["all", "overdue", "warning", "missing", "requested", "ok"];
 
-type SortMode = "critical" | "alpha" | "alphaDesc" | "scoreAsc" | "scoreDesc";
+type SortKey = "critical" | "alpha" | "score";
+type SortDir = "asc" | "desc";
 
 export default function Index() {
   const { clients, projectTypes, records, settings, isLoading, error } = usePlatformData();
