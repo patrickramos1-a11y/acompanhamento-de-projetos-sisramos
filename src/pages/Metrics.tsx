@@ -26,7 +26,7 @@ export default function Metrics() {
       const result = statusForClient(client, activeTypes, allRecords, config);
       const okCount = result.statuses.filter((s) => s === "ok").length;
       return {
-        name: client.code ?? client.name,
+        name: client.name,
         fullName: client.name,
         conformidade: result.score,
         okCount,
