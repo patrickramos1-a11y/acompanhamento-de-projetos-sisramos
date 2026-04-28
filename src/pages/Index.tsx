@@ -14,7 +14,7 @@ import { statusMeta, StatusKey } from "@/lib/status";
 import { recordsForClient, statusForClient } from "@/lib/project-view";
 import { cn } from "@/lib/utils";
 
-const filters: (StatusKey | "all")[] = ["all", "overdue", "late", "warning", "missing", "requested", "planned", "ok", "na"];
+const filters: StatusKey[] = ["overdue", "late", "warning", "missing", "requested", "planned", "ok", "na"];
 
 type SortKey = "critical" | "alpha" | "score";
 type SortDir = "asc" | "desc";
