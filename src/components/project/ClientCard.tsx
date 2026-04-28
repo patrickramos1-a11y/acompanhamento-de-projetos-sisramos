@@ -242,19 +242,19 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
 
       {/* Rodapé condicional */}
       {(hasOverdue || hasLate || hasWarning) && (
-        <div className="flex flex-col gap-1 border-t border-border/40 pt-2.5">
+        <div className="flex flex-col gap-1 border-t border-border/20 pt-2.5">
           {hasOverdue && (
-            <p className="text-xs text-status-overdue">
+            <p className="text-[11px] font-normal text-[#c45c5c]">
               Renovação urgente: {overdueAbbrs.join(", ")}
             </p>
           )}
           {hasLate && (
-            <p className="text-xs text-status-late">
+            <p className="text-[11px] font-normal text-[#c47a4a]">
               Atrasado: {lateAbbrs.join(", ")}
             </p>
           )}
           {hasWarning && (
-            <p className="text-xs text-status-warning">
+            <p className="text-[11px] font-normal text-[#c4a85c]">
               Vence este ano: {warningAbbrs.join(", ")}
             </p>
           )}
