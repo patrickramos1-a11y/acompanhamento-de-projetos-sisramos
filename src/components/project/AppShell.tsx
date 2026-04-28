@@ -1,13 +1,12 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { BarChart3, ClipboardList, Gauge, LogOut, Settings } from "lucide-react";
+import { BarChart3, Gauge, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "Painel", icon: Gauge },
-  { to: "/demandas", label: "Demandas", icon: ClipboardList },
   { to: "/metricas", label: "Métricas", icon: BarChart3 },
   { to: "/configurar", label: "Configurar", icon: Settings },
 ];
