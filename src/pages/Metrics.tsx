@@ -55,7 +55,7 @@ export default function Metrics() {
   return (
     <main className="space-y-5">
       <header><h1 className="text-2xl font-semibold tracking-normal">Métricas</h1><p className="text-sm text-muted-foreground">Visão consolidada de status, conformidade e pendências.</p></header>
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="grid items-stretch gap-4 xl:grid-cols-2">
         <div className="rounded-lg border bg-card p-4">
           <h2 className="mb-4 text-sm font-medium">Distribuição global</h2>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -84,10 +84,10 @@ export default function Metrics() {
             </ul>
           </div>
         </div>
-        <div className="self-start rounded-lg border bg-card p-4">
+        <div className="flex flex-col rounded-lg border bg-card p-4">
           <h2 className="mb-2 text-sm font-medium">Conformidade por cliente</h2>
-          <div className="max-h-[600px] overflow-y-auto">
-            <ResponsiveContainer width="100%" height={compliance.length * 44 + 40}>
+          <div className="flex-1 min-h-[280px] max-h-[600px] overflow-y-auto">
+            <ResponsiveContainer width="100%" height="100%" minHeight={compliance.length * 44 + 40}>
               <BarChart data={compliance} layout="vertical" margin={{ top: 0, right: 48, left: 8, bottom: 0 }} barCategoryGap={6}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
                 <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
