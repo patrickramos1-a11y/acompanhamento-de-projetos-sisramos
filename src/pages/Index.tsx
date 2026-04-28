@@ -20,7 +20,7 @@ type SortKey = "critical" | "alpha" | "score";
 type SortDir = "asc" | "desc";
 
 export default function Index() {
-  const { clients, projectTypes, records, settings, isLoading, error } = usePlatformData();
+  const { clients, projectTypes, records, settings, responsibles, isLoading, error } = usePlatformData();
   const [search, setSearch] = useState("");
   const [statusFilters, setStatusFilters] = useState<StatusKey[]>([]);
   const [statusFilterOpen, setStatusFilterOpen] = useState(false);
@@ -28,9 +28,11 @@ export default function Index() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [typeFilterOpen, setTypeFilterOpen] = useState(false);
+  const [responsibleFilter, setResponsibleFilter] = useState<string>("all");
 
   const types = projectTypes.data ?? [];
   const allRecords = records.data ?? [];
+  const allResponsibles = responsibles.data ?? [];
   const config = settings.data;
 
   const sortedTypes = useMemo(
@@ -40,6 +42,11 @@ export default function Index() {
 
   const toggleType = (id: string) =>
     setSelectedTypeIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const sortedResponsibles = useMemo(
+    () => [...allResponsibles].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+    [allResponsibles],
+  );
 
   const rows = useMemo(() => {
     if (!config) return [];
@@ -53,6 +60,13 @@ export default function Index() {
           const hasAny = clientRecords.some((r) => selectedTypeIds.includes(r.project_type_id));
           if (!hasAny) return false;
         }
+        if (responsibleFilter !== "all") {
+          const clientRecords = recordsForClient(allRecords, client.id);
+          const hasAny = clientRecords.some(
+            (r) => (r as any).planned === true && (r as any).responsible_id === responsibleFilter,
+          );
+          if (!hasAny) return false;
+        }
         return true;
       })
       .filter(({ worst }) => statusFilters.length === 0 || statusFilters.includes(worst))
@@ -64,7 +78,7 @@ export default function Index() {
         const cmp = statusMeta[b.worst].rank - statusMeta[a.worst].rank;
         return (sortDir === "desc" ? cmp : -cmp) || a.client.name.localeCompare(b.client.name);
       });
-  }, [clients.data, types, allRecords, config, search, statusFilters, sortKey, sortDir, selectedTypeIds]);
+  }, [clients.data, types, allRecords, config, search, statusFilters, sortKey, sortDir, selectedTypeIds, responsibleFilter]);
 
   if (isLoading) return <PageSkeleton />;
   if (error || !config) return <EmptyState title="Não foi possível carregar os dados." />;
