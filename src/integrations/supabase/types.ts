@@ -46,7 +46,10 @@ export type Database = {
           client_id: string
           created_at: string
           id: string
+          not_applicable: boolean
           notes: string | null
+          planned: boolean
+          planned_for: string | null
           project_type_id: string
           requested: boolean
           updated_at: string
@@ -56,7 +59,10 @@ export type Database = {
           client_id: string
           created_at?: string
           id?: string
+          not_applicable?: boolean
           notes?: string | null
+          planned?: boolean
+          planned_for?: string | null
           project_type_id: string
           requested?: boolean
           updated_at?: string
@@ -66,7 +72,10 @@ export type Database = {
           client_id?: string
           created_at?: string
           id?: string
+          not_applicable?: boolean
           notes?: string | null
+          planned?: boolean
+          planned_for?: string | null
           project_type_id?: string
           requested?: boolean
           updated_at?: string
