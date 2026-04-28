@@ -27,11 +27,18 @@ export default function Metrics() {
     return statusOrder.reduce<Record<string, string | number>>((acc, status) => ({ ...acc, [statusMeta[status].label]: typeRecords.filter((record) => computeStatus(record, config) === status).length }), { name: type.abbreviation });
   });
   const current = new Date().getFullYear();
-  const timeline = Array.from({ length: 11 }, (_, index) => {
-    const year = current - 5 + index;
-    const status = computeStatus({ year, requested: false }, config, current);
-    return { year, status };
-  });
+  const recordYears = allRecords.map((record) => record.year).filter((year): year is number => typeof year === "number");
+  const timeline = recordYears.length
+    ? (() => {
+        const minYear = Math.min(...recordYears);
+        const maxValid = Math.max(...recordYears) + config.validity_years;
+        const endYear = Math.max(maxValid, current);
+        return Array.from({ length: endYear - minYear + 1 }, (_, index) => {
+          const year = minYear + index;
+          return { year, status: computeStatus({ year, requested: false }, config, current) };
+        });
+      })()
+    : [];
 
   return (
     <main className="space-y-5">
