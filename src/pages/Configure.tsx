@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
-import { ProjectType, useCreateClient, useCreateProjectType, useDeleteClient, useDeleteProjectType, usePlatformData, useUpdateClient, useUpdateProjectType, useUpdateSettings } from "@/hooks/useProjectData";
+import { ProjectType, Responsible, useCreateClient, useCreateProjectType, useCreateResponsible, useDeleteClient, useDeleteProjectType, useDeleteResponsible, usePlatformData, useUpdateClient, useUpdateProjectType, useUpdateResponsible, useUpdateSettings } from "@/hooks/useProjectData";
 
 export function CreateClientDialog({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -135,8 +135,77 @@ function ClientRow({
   );
 }
 
+function CreateResponsibleDialog({ trigger }: { trigger: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const create = useCreateResponsible();
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!name.trim()) return;
+    await create.mutateAsync({ name: name.trim() });
+    setName("");
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Novo responsável</DialogTitle>
+          <DialogDescription>Cadastra uma pessoa que pode ser atribuída a projetos planejados.</DialogDescription>
+        </DialogHeader>
+        <form className="space-y-4" onSubmit={submit}>
+          <div className="space-y-2"><Label>Nome</Label><Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus /></div>
+          <DialogFooter><Button disabled={create.isPending}><Plus className="h-4 w-4" />Cadastrar</Button></DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ResponsibleRow({ responsible, assignedCount }: { responsible: Responsible; assignedCount: number }) {
+  const update = useUpdateResponsible();
+  const remove = useDeleteResponsible();
+  const [name, setName] = useState(responsible.name);
+  useEffect(() => setName(responsible.name), [responsible.name]);
+  const dirty = name.trim().length > 0 && name.trim() !== responsible.name;
+
+  return (
+    <div className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-[1fr_auto_auto_auto] md:items-center">
+      <div className="flex items-center gap-3">
+        <Input value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <span className="px-2 text-xs text-muted-foreground whitespace-nowrap">
+        {assignedCount} {assignedCount === 1 ? "projeto" : "projetos"}
+      </span>
+      <Button size="icon" variant="outline" disabled={!dirty} onClick={() => update.mutate({ id: responsible.id, values: { name: name.trim() } })} title="Salvar nome">
+        <Save className="h-4 w-4" />
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild><Button size="icon" variant="destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {responsible.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {assignedCount > 0
+                ? `Este responsável está atribuído a ${assignedCount} ${assignedCount === 1 ? "projeto" : "projetos"}. Removê-lo deixará esses projetos sem responsável.`
+                : "Esta ação não pode ser desfeita."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => remove.mutate(responsible.id)}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
 export default function Configure() {
-  const { clients, projectTypes, settings, isLoading } = usePlatformData(true);
+  const { clients, projectTypes, settings, responsibles, records, isLoading } = usePlatformData(true);
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
   const updateSettings = useUpdateSettings();
@@ -159,6 +228,18 @@ export default function Configure() {
     () => [...(clients.data ?? [])].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
     [clients.data],
   );
+  const sortedResponsibles = useMemo(
+    () => [...(responsibles.data ?? [])].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+    [responsibles.data],
+  );
+  const responsibleCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of records.data ?? []) {
+      const rid = (r as any).responsible_id as string | null;
+      if (rid) map.set(rid, (map.get(rid) ?? 0) + 1);
+    }
+    return map;
+  }, [records.data]);
   const nextOrder = useMemo(() => (projectTypes.data?.length ?? 0) + 1, [projectTypes.data]);
 
   if (isLoading) return <PageSkeleton />;
@@ -167,10 +248,15 @@ export default function Configure() {
     <main className="space-y-5">
       <header>
         <h1 className="text-2xl font-semibold tracking-normal">Configurar</h1>
-        <p className="text-sm text-muted-foreground">Clientes, tipos de projeto e regra de validade.</p>
+        <p className="text-sm text-muted-foreground">Clientes, tipos de projeto, responsáveis e regra de validade.</p>
       </header>
       <Tabs defaultValue="clients">
-        <TabsList><TabsTrigger value="clients">Clientes</TabsTrigger><TabsTrigger value="types">Tipos</TabsTrigger><TabsTrigger value="settings">Gerais</TabsTrigger></TabsList>
+        <TabsList>
+          <TabsTrigger value="clients">Clientes</TabsTrigger>
+          <TabsTrigger value="types">Tipos</TabsTrigger>
+          <TabsTrigger value="responsibles">Responsáveis</TabsTrigger>
+          <TabsTrigger value="settings">Gerais</TabsTrigger>
+        </TabsList>
         <TabsContent value="clients" className="mt-4 space-y-3">
           <div className="flex justify-end"><CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} /></div>
           {sortedClients.length ? sortedClients.map((client) => (
@@ -189,6 +275,20 @@ export default function Configure() {
           {sortedTypes.length ? (
             <div className="space-y-2">{sortedTypes.map((type) => <TypeRow key={type.id} type={type} />)}</div>
           ) : <EmptyState title="Nenhum tipo de projeto cadastrado." />}
+        </TabsContent>
+        <TabsContent value="responsibles" className="mt-4 space-y-3">
+          <div className="flex justify-end">
+            <CreateResponsibleDialog trigger={<Button><Plus className="h-4 w-4" />Novo Responsável</Button>} />
+          </div>
+          {sortedResponsibles.length ? (
+            <div className="space-y-2">
+              {sortedResponsibles.map((r) => (
+                <ResponsibleRow key={r.id} responsible={r} assignedCount={responsibleCounts.get(r.id) ?? 0} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="Nenhum responsável cadastrado." action={<CreateResponsibleDialog trigger={<Button>Novo Responsável</Button>} />} />
+          )}
         </TabsContent>
         <TabsContent value="settings" className="mt-4 max-w-2xl space-y-5 rounded-lg border bg-card p-4">
           <div className="grid gap-4 sm:grid-cols-2">
