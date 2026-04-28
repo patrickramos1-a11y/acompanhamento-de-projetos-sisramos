@@ -14,7 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          responsible: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          responsible?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          responsible?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_records: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          project_type_id: string
+          requested: boolean
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          project_type_id: string
+          requested?: boolean
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          project_type_id?: string
+          requested?: boolean
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_records_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_records_project_type_id_fkey"
+            columns: ["project_type_id"]
+            isOneToOne: false
+            referencedRelation: "project_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_types: {
+        Row: {
+          abbreviation: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          abbreviation: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          abbreviation?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          id: boolean
+          updated_at: string
+          validity_years: number
+          warning_years: number
+        }
+        Insert: {
+          id?: boolean
+          updated_at?: string
+          validity_years?: number
+          warning_years?: number
+        }
+        Update: {
+          id?: boolean
+          updated_at?: string
+          validity_years?: number
+          warning_years?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
