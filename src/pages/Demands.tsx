@@ -34,8 +34,8 @@ export default function Demands() {
     return (records.data ?? [])
       .filter((record) => record.project_types?.is_active)
       .map((record) => ({ record, status: computeStatus(record, config) }))
-      .filter(({ record, status }) => status !== "ok")
-      .filter(({ record, status }) => statusFilter === "all" || status === statusFilter)
+      .filter(({ status }) => status !== "ok" && status !== "na" && status !== "planned")
+      .filter(({ status }) => statusFilter === "all" || status === statusFilter)
       .filter(({ record }) => typeFilter === "all" || record.project_type_id === typeFilter)
       .filter(({ record }) => `${record.clients?.name ?? ""} ${record.clients?.code ?? ""}`.toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) => statusMeta[b.status].rank - statusMeta[a.status].rank || (a.record.clients?.name ?? "").localeCompare(b.record.clients?.name ?? ""));
