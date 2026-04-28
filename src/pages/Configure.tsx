@@ -142,14 +142,11 @@ export default function Configure() {
   const { clients, projectTypes, settings, isLoading } = usePlatformData(true);
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
-  const updateType = useUpdateProjectType();
   const updateSettings = useUpdateSettings();
-  const [orderedTypes, setOrderedTypes] = useState<ProjectType[]>([]);
   const [validity, setValidity] = useState(5);
   const [warning, setWarning] = useState(1);
   const [confirmCode, setConfirmCode] = useState("");
 
-  useEffect(() => setOrderedTypes(projectTypes.data ?? []), [projectTypes.data]);
   useEffect(() => {
     if (settings.data) {
       setValidity(settings.data.validity_years);
@@ -157,17 +154,15 @@ export default function Configure() {
     }
   }, [settings.data]);
 
+  const sortedTypes = useMemo(
+    () => [...(projectTypes.data ?? [])].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+    [projectTypes.data],
+  );
+  const sortedClients = useMemo(
+    () => [...(clients.data ?? [])].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+    [clients.data],
+  );
   const nextOrder = useMemo(() => (projectTypes.data?.length ?? 0) + 1, [projectTypes.data]);
-
-  async function onDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = orderedTypes.findIndex((type) => type.id === active.id);
-    const newIndex = orderedTypes.findIndex((type) => type.id === over.id);
-    const next = arrayMove(orderedTypes, oldIndex, newIndex);
-    setOrderedTypes(next);
-    await Promise.all(next.map((type, index) => updateType.mutateAsync({ id: type.id, values: { display_order: index + 1 } })));
-  }
 
   if (isLoading) return <PageSkeleton />;
 
