@@ -1,13 +1,10 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { BarChart3, ClipboardList, Gauge, LogOut, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { BarChart3, Gauge, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "Painel", icon: Gauge },
-  { to: "/demandas", label: "Demandas", icon: ClipboardList },
   { to: "/metricas", label: "Métricas", icon: BarChart3 },
   { to: "/configurar", label: "Configurar", icon: Settings },
 ];
@@ -42,10 +39,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
           </nav>
-          <Button className="hidden lg:flex" variant="ghost" onClick={() => supabase.auth.signOut()}>
-            <LogOut className="h-4 w-4" />
-            Sair
-          </Button>
         </div>
       </aside>
       <div className="min-w-0 px-4 py-5 sm:px-6 lg:px-8">{children}</div>
