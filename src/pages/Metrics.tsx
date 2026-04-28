@@ -107,7 +107,6 @@ export default function Metrics() {
               </ResponsiveContainer>
             </div>
           </div>
-        </div>
         <div className="rounded-lg border bg-card p-4 xl:col-span-2"><h2 className="mb-4 text-sm font-medium">Pendências por tipo</h2><div className="h-72"><ResponsiveContainer><BarChart data={byType}><CartesianGrid stroke="hsl(var(--border))" vertical={false} /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><Tooltip />{statusOrder.map((status) => <Bar key={status} dataKey={statusMeta[status].label} stackId="a" fill={chartColor[status]} />)}</BarChart></ResponsiveContainer></div></div>
       </section>
       <section className="rounded-lg border bg-card p-4"><h2 className="mb-4 text-sm font-medium">Timeline de validade</h2>{timeline.length ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-6 lg:grid-cols-11">{timeline.map((item) => <div key={item.year} className={`rounded-md border p-3 text-center text-xs ${statusMeta[item.status].className}`}><div className="font-medium">{item.year}</div><div>{statusMeta[item.status].label}</div></div>)}</div> : <p className="text-sm text-muted-foreground">Sem registros com ano informado para gerar a timeline.</p>}</section>
