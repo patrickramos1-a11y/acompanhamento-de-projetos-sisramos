@@ -197,19 +197,28 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
                 <TooltipTrigger asChild>
                   <span
                     className={cn(
-                      "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium",
+                      "inline-flex h-7 min-w-[48px] max-w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-[11px] font-medium",
                       chipClass(status),
                       isHighlighted && "ring-1 ring-status-planned/70 ring-offset-1 ring-offset-card",
                     )}
                   >
-                    {isHighlighted && <span className="h-1.5 w-1.5 rounded-full bg-status-planned" aria-hidden />}
-                    {chipIcon(status)}
-                    <span>{type.abbreviation}</span>
-                    {status === "ok" && record.year ? <span className="opacity-80">· {record.year}</span> : null}
-                    {status === "planned" && (record as any).planned_for ? <span className="opacity-80">· {formatPlannedFor((record as any).planned_for)}</span> : null}
-                    {status === "late" ? <span className="opacity-80">· atrasado</span> : null}
+                    {isHighlighted && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-status-planned" aria-hidden />}
+                    <span className="shrink-0">{chipIcon(status)}</span>
+                    <span className="truncate">{type.abbreviation}</span>
+                    {status === "ok" && record.year ? (
+                      <span className="whitespace-nowrap opacity-80">· {record.year}</span>
+                    ) : null}
+                    {status === "warning" && record.year ? (
+                      <span className="whitespace-nowrap opacity-80">· {record.year}</span>
+                    ) : null}
+                    {status === "planned" && (record as any).planned_for ? (
+                      <span className="whitespace-nowrap opacity-80">· {formatPlannedFor((record as any).planned_for)}</span>
+                    ) : null}
+                    {status === "late" && (record as any).planned_for ? (
+                      <span className="whitespace-nowrap opacity-80">· {formatPlannedFor((record as any).planned_for)}</span>
+                    ) : null}
                     {showAvatar && responsible ? (
-                      <span className="ml-1 inline-flex" onClick={(e) => e.stopPropagation()}>
+                      <span className="ml-1 inline-flex shrink-0" onClick={(e) => e.stopPropagation()}>
                         <ResponsibleAvatar
                           name={responsible.name}
                           color={(responsible as any).color ?? "#3b82f6"}
