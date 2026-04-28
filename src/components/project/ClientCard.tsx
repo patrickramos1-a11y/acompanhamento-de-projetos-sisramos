@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { AlertTriangle, AlarmClock, Calendar, Clock, RotateCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Client, ProjectRecord, ProjectType, Settings } from "@/hooks/useProjectData";
+import { Client, ProjectRecord, ProjectType, Responsible, Settings } from "@/hooks/useProjectData";
+import { ResponsibleAvatar } from "@/components/project/ResponsibleAvatar";
 import { cn } from "@/lib/utils";
 import {
   complianceScore,
@@ -18,6 +19,7 @@ type Props = {
   types: ProjectType[];
   records: ProjectRecord[];
   settings: Settings;
+  responsibles?: Responsible[];
   highlightResponsibleIds?: string[] | null;
 };
 
