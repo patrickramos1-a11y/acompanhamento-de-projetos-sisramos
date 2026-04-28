@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Check, Clock, Plus, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, Calendar, Check, Clock, Plus, Save, Trash2 } from "lucide-react";
 import { computeStatus, statusMeta, type StatusKey } from "@/lib/status";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -209,6 +209,9 @@ const previewIcon: Record<StatusKey, typeof Check> = {
   overdue: AlertTriangle,
   missing: AlertTriangle,
   requested: Clock,
+  planned: Calendar,
+  late: AlertTriangle,
+  na: Check,
 };
 
 const previewCellClass: Record<"ok" | "warning" | "overdue", string> = {

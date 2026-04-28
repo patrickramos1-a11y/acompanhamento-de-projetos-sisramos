@@ -1,5 +1,5 @@
 import { Client, ProjectRecord, ProjectType, Settings } from "@/hooks/useProjectData";
-import { complianceScore, computeStatus, StatusKey, worstStatus } from "@/lib/status";
+import { complianceScore, computeStatus, StatusKey, statusMeta, worstStatus } from "@/lib/status";
 
 export function recordsForClient(records: ProjectRecord[], clientId: string) {
   return records.filter((record) => record.client_id === clientId);
@@ -13,6 +13,6 @@ export function statusForClient(client: Client, types: ProjectType[], records: P
 }
 
 export function sortByCriticality(a: StatusKey, b: StatusKey) {
-  const order: Record<StatusKey, number> = { overdue: 5, warning: 4, missing: 3, requested: 2, ok: 1 };
-  return order[b] - order[a];
+  return statusMeta[b].rank - statusMeta[a].rank;
 }
+

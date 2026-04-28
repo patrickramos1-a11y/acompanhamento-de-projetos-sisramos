@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { AlertTriangle, Clock, RotateCw } from "lucide-react";
+import { AlertTriangle, AlarmClock, Calendar, Clock, RotateCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Client, ProjectRecord, ProjectType, Settings } from "@/hooks/useProjectData";
 import { cn } from "@/lib/utils";
 import {
   complianceScore,
   computeStatus,
+  formatPlannedFor,
   StatusKey,
   statusDistance,
   statusMeta,
@@ -35,12 +36,18 @@ function chipClass(status: StatusKey) {
   switch (status) {
     case "overdue":
       return "bg-[#2b0d0d] border border-[#4a1a1a] text-[#f5a3a3]";
+    case "late":
+      return "bg-status-late/10 border border-status-late/35 text-status-late";
     case "warning":
       return "bg-[#2b1f0d] border border-[#4a3515] text-[#f5d27a]";
     case "ok":
       return "bg-[#0d2b1f] border border-[#1a4a35] text-[#86e2b8]";
     case "requested":
       return "bg-[#0d1a2b] border border-[#1a3050] text-[#8cc4f5]";
+    case "planned":
+      return "bg-status-planned/10 border border-status-planned/35 text-status-planned";
+    case "na":
+      return "bg-transparent border border-dashed border-[#1f1f2a] text-muted-foreground/40 opacity-70";
     case "missing":
     default:
       return "bg-transparent border border-dashed border-[#2a2a3a] text-muted-foreground";
@@ -49,8 +56,10 @@ function chipClass(status: StatusKey) {
 
 function chipIcon(status: StatusKey) {
   if (status === "overdue") return <AlertTriangle className="h-3 w-3" />;
+  if (status === "late") return <AlarmClock className="h-3 w-3" />;
   if (status === "warning") return <Clock className="h-3 w-3" />;
   if (status === "requested") return <RotateCw className="h-3 w-3" />;
+  if (status === "planned") return <Calendar className="h-3 w-3" />;
   return null;
 }
 
@@ -59,40 +68,52 @@ export function ClientCard({ client, types, records, settings }: Props) {
 
   const items = types
     .map((type) => {
-      const record = recordsByType.get(type.id) ?? { year: null, requested: false };
-      const status = computeStatus(record, settings);
+      const raw = recordsByType.get(type.id);
+      const record = raw ?? { year: null, requested: false, not_applicable: false, planned: false, planned_for: null };
+      const status = computeStatus(record as any, settings);
       return { type, record, status };
     })
-    .sort((a, b) => statusMeta[b.status].rank - statusMeta[a.status].rank);
+    .sort((a, b) => {
+      // N/A always last
+      if (a.status === "na" && b.status !== "na") return 1;
+      if (b.status === "na" && a.status !== "na") return -1;
+      return statusMeta[b.status].rank - statusMeta[a.status].rank;
+    });
 
   const statuses = items.map((i) => i.status);
   const score = complianceScore(statuses);
 
   const counts = {
     overdue: statuses.filter((s) => s === "overdue").length,
+    late: statuses.filter((s) => s === "late").length,
     warning: statuses.filter((s) => s === "warning").length,
     missing: statuses.filter((s) => s === "missing").length,
   };
 
   const hasOverdue = counts.overdue > 0;
+  const hasLate = counts.late > 0;
   const hasWarning = counts.warning > 0;
   const hasMissing = counts.missing > 0;
-  const allOk = !hasOverdue && !hasWarning && !hasMissing;
+  const allOk = !hasOverdue && !hasLate && !hasWarning && !hasMissing;
 
   const borderClass = hasOverdue
     ? "border-status-overdue/25 hover:border-status-overdue/45"
-    : hasWarning
-      ? "border-status-warning/25 hover:border-status-warning/45"
-      : allOk
-        ? "border-status-ok/20 hover:border-status-ok/40"
-        : "border-border hover:border-border/80";
+    : hasLate
+      ? "border-status-late/25 hover:border-status-late/45"
+      : hasWarning
+        ? "border-status-warning/25 hover:border-status-warning/45"
+        : allOk
+          ? "border-status-ok/20 hover:border-status-ok/40"
+          : "border-border hover:border-border/80";
 
   const subtextParts: { text: string; className: string }[] = [];
   if (counts.overdue) subtextParts.push({ text: `${counts.overdue} ${counts.overdue === 1 ? "defasado" : "defasados"}`, className: "text-status-overdue" });
+  if (counts.late) subtextParts.push({ text: `${counts.late} ${counts.late === 1 ? "atrasado" : "atrasados"}`, className: "text-status-late" });
   if (counts.warning) subtextParts.push({ text: `${counts.warning} ${counts.warning === 1 ? "vencendo" : "vencendo"}`, className: "text-status-warning" });
   if (counts.missing) subtextParts.push({ text: `${counts.missing} ${counts.missing === 1 ? "faltando" : "faltando"}`, className: "text-status-missing" });
 
   const overdueAbbrs = items.filter((i) => i.status === "overdue").map((i) => i.type.abbreviation);
+  const lateAbbrs = items.filter((i) => i.status === "late").map((i) => i.type.abbreviation);
   const warningAbbrs = items.filter((i) => i.status === "warning").map((i) => i.type.abbreviation);
 
   return (
@@ -157,6 +178,8 @@ export function ClientCard({ client, types, records, settings }: Props) {
                     {chipIcon(status)}
                     <span>{type.abbreviation}</span>
                     {status === "ok" && record.year ? <span className="opacity-80">· {record.year}</span> : null}
+                    {status === "planned" && (record as any).planned_for ? <span className="opacity-80">· {formatPlannedFor((record as any).planned_for)}</span> : null}
+                    {status === "late" ? <span className="opacity-80">· atrasado</span> : null}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -171,11 +194,16 @@ export function ClientCard({ client, types, records, settings }: Props) {
       </div>
 
       {/* Rodapé condicional */}
-      {(hasOverdue || hasWarning) && (
+      {(hasOverdue || hasLate || hasWarning) && (
         <div className="flex flex-col gap-1 border-t border-border/40 pt-2.5">
           {hasOverdue && (
             <p className="text-xs text-status-overdue">
               Renovação urgente: {overdueAbbrs.join(", ")}
+            </p>
+          )}
+          {hasLate && (
+            <p className="text-xs text-status-late">
+              Atrasado: {lateAbbrs.join(", ")}
             </p>
           )}
           {hasWarning && (

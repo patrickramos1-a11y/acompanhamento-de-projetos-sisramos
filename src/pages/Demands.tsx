@@ -34,8 +34,8 @@ export default function Demands() {
     return (records.data ?? [])
       .filter((record) => record.project_types?.is_active)
       .map((record) => ({ record, status: computeStatus(record, config) }))
-      .filter(({ record, status }) => status !== "ok")
-      .filter(({ record, status }) => statusFilter === "all" || status === statusFilter)
+      .filter(({ status }) => status !== "ok" && status !== "na" && status !== "planned")
+      .filter(({ status }) => statusFilter === "all" || status === statusFilter)
       .filter(({ record }) => typeFilter === "all" || record.project_type_id === typeFilter)
       .filter(({ record }) => `${record.clients?.name ?? ""} ${record.clients?.code ?? ""}`.toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) => statusMeta[b.status].rank - statusMeta[a.status].rank || (a.record.clients?.name ?? "").localeCompare(b.record.clients?.name ?? ""));
@@ -55,7 +55,7 @@ export default function Demands() {
       <header><h1 className="text-2xl font-semibold tracking-normal">Demandas</h1><p className="text-sm text-muted-foreground">Pendências vencidas, em alerta, faltantes ou solicitadas.</p></header>
       <section className="grid gap-3 lg:grid-cols-[1fr_180px_220px_180px]">
         <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" placeholder="Buscar cliente" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusKey | "all")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos status</SelectItem>{statusOrder.filter((s) => s !== "ok").map((s) => <SelectItem key={s} value={s}>{statusMeta[s].label}</SelectItem>)}</SelectContent></Select>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusKey | "all")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos status</SelectItem>{statusOrder.filter((s) => s !== "ok" && s !== "na" && s !== "planned").map((s) => <SelectItem key={s} value={s}>{statusMeta[s].label}</SelectItem>)}</SelectContent></Select>
         <Select value={typeFilter} onValueChange={setTypeFilter}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos tipos</SelectItem>{projectTypes.data?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}</SelectContent></Select>
         <Select value={view} onValueChange={(v) => setView(v as ViewMode)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="flat">Lista plana</SelectItem><SelectItem value="client">Por cliente</SelectItem><SelectItem value="type">Por tipo</SelectItem></SelectContent></Select>
       </section>

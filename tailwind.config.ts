@@ -63,6 +63,9 @@ export default {
           overdue: "hsl(var(--status-overdue))",
           missing: "hsl(var(--status-missing))",
           requested: "hsl(var(--status-requested))",
+          planned: "hsl(var(--status-planned))",
+          late: "hsl(var(--status-late))",
+          na: "hsl(var(--status-na))",
         },
       },
       borderRadius: {
