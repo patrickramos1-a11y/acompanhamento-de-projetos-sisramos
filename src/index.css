@@ -37,6 +37,9 @@
     --status-overdue: 2 73% 56%;
     --status-missing: 220 9% 58%;
     --status-requested: 205 82% 56%;
+    --status-planned: 250 70% 65%;
+    --status-late: 25 92% 56%;
+    --status-na: 220 8% 38%;
   }
 
   .dark {
