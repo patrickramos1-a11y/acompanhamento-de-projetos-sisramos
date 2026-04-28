@@ -14,7 +14,7 @@ import { statusMeta, StatusKey } from "@/lib/status";
 import { recordsForClient, statusForClient } from "@/lib/project-view";
 import { cn } from "@/lib/utils";
 
-const filters: (StatusKey | "all")[] = ["all", "overdue", "late", "warning", "missing", "requested", "planned", "ok", "na"];
+const filters: StatusKey[] = ["overdue", "late", "warning", "missing", "requested", "planned", "ok", "na"];
 
 type SortKey = "critical" | "alpha" | "score";
 type SortDir = "asc" | "desc";
@@ -22,7 +22,8 @@ type SortDir = "asc" | "desc";
 export default function Index() {
   const { clients, projectTypes, records, settings, isLoading, error } = usePlatformData();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
+  const [statusFilters, setStatusFilters] = useState<StatusKey[]>([]);
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("critical");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
@@ -54,7 +55,7 @@ export default function Index() {
         }
         return true;
       })
-      .filter(({ worst }) => statusFilter === "all" || worst === statusFilter)
+      .filter(({ worst }) => statusFilters.length === 0 || statusFilters.includes(worst))
       .sort((a, b) => {
         const dir = sortDir === "asc" ? 1 : -1;
         if (sortKey === "alpha") return a.client.name.localeCompare(b.client.name) * dir;
@@ -63,7 +64,7 @@ export default function Index() {
         const cmp = statusMeta[b.worst].rank - statusMeta[a.worst].rank;
         return (sortDir === "desc" ? cmp : -cmp) || a.client.name.localeCompare(b.client.name);
       });
-  }, [clients.data, types, allRecords, config, search, statusFilter, sortKey, sortDir, selectedTypeIds]);
+  }, [clients.data, types, allRecords, config, search, statusFilters, sortKey, sortDir, selectedTypeIds]);
 
   if (isLoading) return <PageSkeleton />;
   if (error || !config) return <EmptyState title="Não foi possível carregar os dados." />;
@@ -183,18 +184,71 @@ export default function Index() {
             </Command>
           </PopoverContent>
         </Popover>
-        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusKey | "all")}>
-          <SelectTrigger className="w-full lg:w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {filters.map((filter) => (
-              <SelectItem key={filter} value={filter}>
-                {filter === "all" ? "Todos" : statusMeta[filter].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={statusFilterOpen} onOpenChange={setStatusFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-between lg:w-56">
+              <span className="flex items-center gap-2 truncate">
+                <Filter className="h-4 w-4" />
+                {statusFilters.length === 0 ? (
+                  "Filtrar por status"
+                ) : (
+                  <>
+                    Status
+                    <Badge variant="secondary" className="ml-1">{statusFilters.length}</Badge>
+                  </>
+                )}
+              </span>
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar status..." />
+              <CommandList>
+                <CommandEmpty>Nenhum status encontrado.</CommandEmpty>
+                <CommandGroup>
+                  {filters.map((filter) => {
+                    const checked = statusFilters.includes(filter);
+                    return (
+                      <CommandItem
+                        key={filter}
+                        value={statusMeta[filter].label}
+                        onSelect={() =>
+                          setStatusFilters((prev) =>
+                            prev.includes(filter) ? prev.filter((x) => x !== filter) : [...prev, filter],
+                          )
+                        }
+                      >
+                        <div
+                          className={cn(
+                            "mr-2 flex h-4 w-4 items-center justify-center rounded border",
+                            checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40",
+                          )}
+                        >
+                          {checked && <Check className="h-3 w-3" />}
+                        </div>
+                        <span className="flex-1 truncate">{statusMeta[filter].label}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+              {statusFilters.length > 0 && (
+                <div className="border-t p-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-center"
+                    onClick={() => setStatusFilters([])}
+                  >
+                    <X className="h-4 w-4" />
+                    Limpar seleção
+                  </Button>
+                </div>
+              )}
+            </Command>
+          </PopoverContent>
+        </Popover>
       </section>
 
       {total === 0 ? (
