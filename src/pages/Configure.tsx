@@ -209,6 +209,9 @@ const previewIcon: Record<StatusKey, typeof Check> = {
   overdue: AlertTriangle,
   missing: AlertTriangle,
   requested: Clock,
+  planned: Calendar,
+  late: AlertTriangle,
+  na: Check,
 };
 
 const previewCellClass: Record<"ok" | "warning" | "overdue", string> = {
