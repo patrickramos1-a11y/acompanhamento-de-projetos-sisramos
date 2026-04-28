@@ -141,11 +141,13 @@ function CreateResponsibleDialog({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const create = useCreateResponsible();
+  const { data: existing } = useResponsibles();
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!name.trim()) return;
-    await create.mutateAsync({ name: name.trim() });
+    const color = nextDefaultColor((existing ?? []).map((r) => (r as any).color ?? ""));
+    await create.mutateAsync({ name: name.trim(), color });
     setName("");
     setOpen(false);
   }
@@ -171,18 +173,33 @@ function ResponsibleRow({ responsible, assignedCount }: { responsible: Responsib
   const update = useUpdateResponsible();
   const remove = useDeleteResponsible();
   const [name, setName] = useState(responsible.name);
+  const initialColor = (responsible as any).color ?? "#3b82f6";
+  const [color, setColor] = useState<string>(initialColor);
   useEffect(() => setName(responsible.name), [responsible.name]);
-  const dirty = name.trim().length > 0 && name.trim() !== responsible.name;
+  useEffect(() => setColor((responsible as any).color ?? "#3b82f6"), [(responsible as any).color]);
+  const dirty =
+    (name.trim().length > 0 && name.trim() !== responsible.name) ||
+    color.toLowerCase() !== initialColor.toLowerCase();
 
   return (
-    <div className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-[1fr_auto_auto_auto] md:items-center">
-      <div className="flex items-center gap-3">
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
+    <div className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-[auto_1fr_auto_auto_auto] md:items-center">
+      <div className="flex items-center gap-2">
+        <ResponsibleAvatar name={name || responsible.name} color={color} size={28} withTooltip={false} />
+        <label className="relative inline-flex h-7 w-7 cursor-pointer items-center justify-center overflow-hidden rounded-md border border-border bg-background" title="Escolher cor">
+          <span className="h-4 w-4 rounded-sm" style={{ backgroundColor: color }} />
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="absolute inset-0 cursor-pointer opacity-0"
+          />
+        </label>
       </div>
+      <Input value={name} onChange={(e) => setName(e.target.value)} />
       <span className="px-2 text-xs text-muted-foreground whitespace-nowrap">
         {assignedCount} {assignedCount === 1 ? "projeto" : "projetos"}
       </span>
-      <Button size="icon" variant="outline" disabled={!dirty} onClick={() => update.mutate({ id: responsible.id, values: { name: name.trim() } })} title="Salvar nome">
+      <Button size="icon" variant="outline" disabled={!dirty} onClick={() => update.mutate({ id: responsible.id, values: { name: name.trim(), color } as any })} title="Salvar alterações">
         <Save className="h-4 w-4" />
       </Button>
       <AlertDialog>
