@@ -347,6 +347,7 @@ export default function Index() {
               types={types}
               records={recordsForClient(allRecords, client.id)}
               settings={config}
+              responsibles={allResponsibles}
               highlightResponsibleIds={responsibleFilters.length > 0 ? responsibleFilters : null}
             />
           ))}

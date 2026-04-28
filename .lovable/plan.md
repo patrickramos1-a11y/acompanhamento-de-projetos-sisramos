@@ -1,71 +1,65 @@
+## Avatar colorido por responsável
 
-## Responsáveis — implementação
+### 1. Banco de dados
 
-### 1. Banco de dados (1 migração)
+Migração adicionando coluna `color` em `responsibles`:
+- `color text not null default '#3b82f6'`
+- Sem CHECK constraint (validação visual no front).
 
-Nova tabela `responsibles`:
-- `id uuid pk default gen_random_uuid()`
-- `name text not null`
-- `created_at`, `updated_at timestamptz` com defaults
-- RLS: `Public full access` (mesmo padrão das outras tabelas)
-- Trigger `update_updated_at_column` em `BEFORE UPDATE`
+### 2. Paleta padrão
 
-Em `project_records`, adicionar:
-- `responsible_id uuid null references public.responsibles(id) on delete set null`
+Novo arquivo `src/lib/responsible-colors.ts` exportando:
+- `RESPONSIBLE_PALETTE`: array de 10 cores hex distintas
+  - azul `#3b82f6`, verde `#22c55e`, roxo `#8b5cf6`, laranja `#f97316`, rosa `#ec4899`, ciano `#06b6d4`, amarelo-escuro `#ca8a04`, vermelho-escuro `#b91c1c`, verde-água `#14b8a6`, lilás `#a78bfa`
+- `nextDefaultColor(existingColors: string[])`: retorna a primeira cor da paleta que ainda não foi usada; se todas foram usadas, retorna `RESPONSIBLE_PALETTE[existing.length % 10]`
+- `getInitial(name: string)`: primeira letra maiúscula do nome (com fallback `?`)
 
-`on delete set null` garante que excluir um responsável apenas remove o vínculo, sem apagar projetos.
+### 3. Componente reutilizável `ResponsibleAvatar`
 
-### 2. Camada de dados (`src/hooks/useProjectData.ts`)
+Novo `src/components/project/ResponsibleAvatar.tsx`:
+- Props: `name: string`, `color: string`, `size?: number` (default 18), `withTooltip?: boolean` (default true)
+- Render: `<span>` circular com `backgroundColor: color`, texto branco em negrito, tamanho do texto proporcional (`size * 0.55`)
+- Quando `withTooltip`, envolve em `Tooltip` mostrando o nome completo
 
-- Novo tipo `Responsible = Tables<"responsibles">`
-- Hooks: `useResponsibles`, `useCreateResponsible`, `useUpdateResponsible`, `useDeleteResponsible`
-- Incluir `responsibles` em `usePlatformData` e em `invalidateAll`
-- `useUpdateProjectRecord` já aceita `TablesUpdate<"project_records">` — passa a aceitar `responsible_id` automaticamente
+### 4. Configurar — aba Responsáveis (`src/pages/Configure.tsx`)
 
-### 3. Configurar — nova aba "Responsáveis" (`src/pages/Configure.tsx`)
+`CreateResponsibleDialog`:
+- Ao submeter, calcular `color = nextDefaultColor(responsibles.data.map(r => r.color))` e enviar junto com `name`
+- Necessita receber a lista de responsáveis existentes via prop ou ler via `useResponsibles()` dentro do componente
 
-- Adicionar `<TabsTrigger value="responsibles">Responsáveis</TabsTrigger>` entre "Tipos" e "Gerais"
-- `<TabsContent value="responsibles">` com:
-  - Botão "Novo Responsável" → modal `CreateResponsibleDialog` (1 campo Nome)
-  - Lista de cards `ResponsibleRow` mostrando nome editável + contagem `N projetos atribuídos` (calculada a partir de `records.data`)
-  - Ícones de salvar (quando dirty) e excluir
-  - `AlertDialog` de exclusão: se contagem > 0, exibe aviso "Este responsável está atribuído a X projetos. Removê-lo deixará esses projetos sem responsável." e mantém botão "Excluir" habilitado
+`ResponsibleRow`:
+- Adicionar coluna de cor entre o nome e a contagem
+- Layout do grid: `[avatar_color_picker | input_nome | contagem | save | delete]`
+- Mostrar `ResponsibleAvatar` (24px) + `<input type="color" value={color} onChange={...}>` estilizado pequeno (≈28x28px, sem borda visual nativa)
+- Estado local `color`, marcar `dirty` se nome OU cor mudaram
+- Botão Salvar envia `{ name, color }` num único `update.mutate`
 
-### 4. Popover de edição (`src/components/project/RecordEditor.tsx`)
+### 5. Painel — chips com avatar (`src/components/project/ClientCard.tsx`)
 
-Dentro do bloco `Planejado` (visível somente quando `planned === true`), abaixo dos selects de mês/ano:
-- Novo `<Select>` "Responsável" com opção `"none"` ("Sem responsável") + lista de responsáveis (ordenada alfabeticamente)
-- Estado `responsibleId: string | null`, inicializado de `record.responsible_id`
-- No submit, `responsible_id: planned ? responsibleId : null` (zera se Planejado for desligado, junto com os demais resets atuais)
+- Adicionar prop `responsibles: Responsible[]`
+- Construir `responsibleMap: Map<string, Responsible>` no início
+- No render dos chips: para status `planned` ou `late` que tenham `record.responsible_id`, buscar o responsável e renderizar `<ResponsibleAvatar size={18} name={r.name} color={r.color} />` ao final do chip (margem-esquerda 4px)
+- Atualizar `Index.tsx` para passar `responsibles={responsibles.data ?? []}` ao `ClientCard`
 
-### 5. Painel — filtro Responsável (`src/pages/Index.tsx`)
+### 6. Detalhe do cliente — coluna Responsável (`src/pages/ClientDetail.tsx`)
 
-- Novo `Select` single-select à direita dos filtros existentes:
-  - Trigger "Filtrar por responsável" / nome selecionado
-  - Itens: "Todos" + lista de responsáveis
-- Estado `responsibleFilter: string | "all"`
-- No `useMemo` de `rows`: quando filtro ativo, manter apenas clientes onde algum record tem `planned === true` e `responsible_id === filtro`
-- Passar `highlightResponsibleId` para `ClientCard`. Nos chips `planned`, quando `record.responsible_id === highlightResponsibleId`, adicionar um pequeno ponto colorido (`<span class="h-1.5 w-1.5 rounded-full bg-status-planned/80">`) antes da abreviação para identificar quais projetos pertencem a ele
+- Adicionar `responsibles` ao destructuring de `usePlatformData()`
+- Calcular `hasAnyResponsible = rows.some(r => r.record?.responsible_id)`
+- Se true, renderizar `<TableHead>Responsável</TableHead>` entre "Situação" e "Observações" e a célula correspondente em cada linha:
+  - Com responsável: `<ResponsibleAvatar size={24} name={r.name} color={r.color} withTooltip={false} />` + `<span class="text-sm">{r.name}</span>`
+  - Sem: `—`
+- Atualizar o `colSpan={5}` da linha "Registro ainda não criado" para `colSpan={6}` quando a coluna estiver visível
 
-### 6. Métricas — Carga por Responsável (`src/pages/Metrics.tsx`)
+### 7. Tipos Supabase
 
-Nova `<section>` abaixo da timeline:
-- Calcular agregação: para cada responsável, contar records onde `planned === true` e `responsible_id === r.id`, separando em `planned` (no prazo) vs `late` (atrasado), via `computeStatus`
-- Filtrar fora responsáveis com total 0
-- Se array vazio → estado vazio "Nenhum projeto planejado atribuído ainda"
-- Senão → `BarChart` horizontal (`layout="vertical"`) com duas barras stackadas:
-  - `dataKey="planned"` cor `hsl(var(--status-planned))`
-  - `dataKey="late"` cor `hsl(var(--status-late))`
-  - Tooltip customizado com nome, total, no prazo (com lista de abreviações), atrasados (com lista de abreviações)
+`src/integrations/supabase/types.ts` é regenerado automaticamente após a migração — `Responsible.color` ficará disponível.
 
-### 7. Resumo de arquivos
+### Arquivos tocados
 
-- 1 migração SQL (`responsibles` + coluna FK em `project_records` + trigger + RLS)
-- `src/hooks/useProjectData.ts` — tipos e hooks
-- `src/pages/Configure.tsx` — nova aba e modal
-- `src/components/project/RecordEditor.tsx` — campo no bloco Planejado
-- `src/pages/Index.tsx` — filtro single-select e prop de destaque
-- `src/components/project/ClientCard.tsx` — indicador no chip planejado destacado
-- `src/pages/Metrics.tsx` — gráfico Carga por Responsável
-
-`src/integrations/supabase/types.ts` é regenerado automaticamente após a migração.
+- 1 migração SQL
+- `src/lib/responsible-colors.ts` (novo)
+- `src/components/project/ResponsibleAvatar.tsx` (novo)
+- `src/pages/Configure.tsx`
+- `src/components/project/ClientCard.tsx`
+- `src/pages/Index.tsx` (passar prop `responsibles`)
+- `src/pages/ClientDetail.tsx`

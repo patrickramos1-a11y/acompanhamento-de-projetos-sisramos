@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { AlertTriangle, AlarmClock, Calendar, Clock, RotateCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Client, ProjectRecord, ProjectType, Settings } from "@/hooks/useProjectData";
+import { Client, ProjectRecord, ProjectType, Responsible, Settings } from "@/hooks/useProjectData";
+import { ResponsibleAvatar } from "@/components/project/ResponsibleAvatar";
 import { cn } from "@/lib/utils";
 import {
   complianceScore,
@@ -18,6 +19,7 @@ type Props = {
   types: ProjectType[];
   records: ProjectRecord[];
   settings: Settings;
+  responsibles?: Responsible[];
   highlightResponsibleIds?: string[] | null;
 };
 
@@ -64,8 +66,9 @@ function chipIcon(status: StatusKey) {
   return null;
 }
 
-export function ClientCard({ client, types, records, settings, highlightResponsibleIds }: Props) {
+export function ClientCard({ client, types, records, settings, responsibles, highlightResponsibleIds }: Props) {
   const recordsByType = new Map(records.map((record) => [record.project_type_id, record]));
+  const responsibleMap = new Map((responsibles ?? []).map((r) => [r.id, r]));
 
   const items = types
     .map((type) => {
@@ -172,6 +175,9 @@ export function ClientCard({ client, types, records, settings, highlightResponsi
               highlightResponsibleIds.length > 0 &&
               status === "planned" &&
               highlightResponsibleIds.includes((record as any).responsible_id);
+            const responsibleId = (record as any).responsible_id as string | null | undefined;
+            const responsible = responsibleId ? responsibleMap.get(responsibleId) : undefined;
+            const showAvatar = (status === "planned" || status === "late") && !!responsible;
             return (
               <Tooltip key={type.id}>
                 <TooltipTrigger asChild>
@@ -188,12 +194,22 @@ export function ClientCard({ client, types, records, settings, highlightResponsi
                     {status === "ok" && record.year ? <span className="opacity-80">· {record.year}</span> : null}
                     {status === "planned" && (record as any).planned_for ? <span className="opacity-80">· {formatPlannedFor((record as any).planned_for)}</span> : null}
                     {status === "late" ? <span className="opacity-80">· atrasado</span> : null}
+                    {showAvatar && responsible ? (
+                      <span className="ml-1 inline-flex" onClick={(e) => e.stopPropagation()}>
+                        <ResponsibleAvatar
+                          name={responsible.name}
+                          color={(responsible as any).color ?? "#3b82f6"}
+                          size={18}
+                        />
+                      </span>
+                    ) : null}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="font-medium">{type.name}</p>
                   <p>{meta.label}{until ? ` · válido até ${until}` : ""}</p>
                   <p>{statusDistance(record, settings)}</p>
+                  {responsible ? <p className="text-muted-foreground">Responsável: {responsible.name}</p> : null}
                 </TooltipContent>
               </Tooltip>
             );
