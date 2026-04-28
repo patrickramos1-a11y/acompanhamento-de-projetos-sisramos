@@ -22,7 +22,8 @@ type SortDir = "asc" | "desc";
 export default function Index() {
   const { clients, projectTypes, records, settings, isLoading, error } = usePlatformData();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
+  const [statusFilters, setStatusFilters] = useState<StatusKey[]>([]);
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("critical");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
