@@ -87,26 +87,26 @@ export default function Metrics() {
         <div className="rounded-lg border bg-card p-4">
           <h2 className="mb-4 text-sm font-medium">Conformidade por cliente</h2>
           <div className="max-h-[600px] overflow-y-auto">
-            <ResponsiveContainer width="100%" height={Math.max(200, compliance.length * 44)}>
-              <BarChart data={compliance} layout="vertical" margin={{ left: 8, right: 48, top: 8, bottom: 8 }} barCategoryGap={6}>
-                  <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
-                  <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
-                  <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} interval={0} />
-                  <Tooltip
-                    cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
-                    contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }}
-                    formatter={(value: number, _name, props) => [`${value}% (${props.payload.okCount}/${props.payload.total} OK)`, props.payload.fullName]}
-                  />
-                  <Bar dataKey="conformidade" radius={[0, 4, 4, 0]} barSize={22}>
-                    {compliance.map((entry, idx) => (
-                      <Cell key={idx} fill={entry.conformidade < 40 ? "#f87171" : entry.conformidade < 70 ? "#fbbf24" : "#34d399"} />
-                    ))}
-                    <LabelList dataKey="conformidade" position="right" formatter={(v: number) => `${v}%`} style={{ fill: "hsl(var(--foreground))", fontSize: 11 }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height={compliance.length * 44 + 40}>
+              <BarChart data={compliance} layout="vertical" margin={{ top: 0, right: 60, left: 60, bottom: 0 }} barCategoryGap={6}>
+                <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
+                <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
+                <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} interval={0} />
+                <Tooltip
+                  cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+                  contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }}
+                  formatter={(value: number, _name, props) => [`${value}% (${props.payload.okCount}/${props.payload.total} OK)`, props.payload.fullName]}
+                />
+                <Bar dataKey="conformidade" radius={[0, 4, 4, 0]} barSize={24} isAnimationActive={false}>
+                  {compliance.map((entry, idx) => (
+                    <Cell key={idx} fill={entry.conformidade < 40 ? "#f87171" : entry.conformidade < 70 ? "#fbbf24" : "#34d399"} />
+                  ))}
+                  <LabelList dataKey="conformidade" position="right" formatter={(v: number) => `${v}%`} style={{ fill: "hsl(var(--foreground))", fontSize: 11 }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
+        </div>
         <div className="rounded-lg border bg-card p-4 xl:col-span-2"><h2 className="mb-4 text-sm font-medium">Pendências por tipo</h2><div className="h-72"><ResponsiveContainer><BarChart data={byType}><CartesianGrid stroke="hsl(var(--border))" vertical={false} /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><Tooltip />{statusOrder.map((status) => <Bar key={status} dataKey={statusMeta[status].label} stackId="a" fill={chartColor[status]} />)}</BarChart></ResponsiveContainer></div></div>
       </section>
       <section className="rounded-lg border bg-card p-4"><h2 className="mb-4 text-sm font-medium">Timeline de validade</h2>{timeline.length ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-6 lg:grid-cols-11">{timeline.map((item) => <div key={item.year} className={`rounded-md border p-3 text-center text-xs ${statusMeta[item.status].className}`}><div className="font-medium">{item.year}</div><div>{statusMeta[item.status].label}</div></div>)}</div> : <p className="text-sm text-muted-foreground">Sem registros com ano informado para gerar a timeline.</p>}</section>
