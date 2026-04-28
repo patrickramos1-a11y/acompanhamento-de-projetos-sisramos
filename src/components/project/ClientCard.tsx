@@ -66,8 +66,9 @@ function chipIcon(status: StatusKey) {
   return null;
 }
 
-export function ClientCard({ client, types, records, settings, highlightResponsibleIds }: Props) {
+export function ClientCard({ client, types, records, settings, responsibles, highlightResponsibleIds }: Props) {
   const recordsByType = new Map(records.map((record) => [record.project_type_id, record]));
+  const responsibleMap = new Map((responsibles ?? []).map((r) => [r.id, r]));
 
   const items = types
     .map((type) => {
