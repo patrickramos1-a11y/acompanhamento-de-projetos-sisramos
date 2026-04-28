@@ -27,11 +27,18 @@ export default function Metrics() {
     return statusOrder.reduce<Record<string, string | number>>((acc, status) => ({ ...acc, [statusMeta[status].label]: typeRecords.filter((record) => computeStatus(record, config) === status).length }), { name: type.abbreviation });
   });
   const current = new Date().getFullYear();
-  const timeline = Array.from({ length: 11 }, (_, index) => {
-    const year = current - 5 + index;
-    const status = computeStatus({ year, requested: false }, config, current);
-    return { year, status };
-  });
+  const recordYears = allRecords.map((record) => record.year).filter((year): year is number => typeof year === "number");
+  const timeline = recordYears.length
+    ? (() => {
+        const minYear = Math.min(...recordYears);
+        const maxValid = Math.max(...recordYears) + config.validity_years;
+        const endYear = Math.max(maxValid, current);
+        return Array.from({ length: endYear - minYear + 1 }, (_, index) => {
+          const year = minYear + index;
+          return { year, status: computeStatus({ year, requested: false }, config, current) };
+        });
+      })()
+    : [];
 
   return (
     <main className="space-y-5">
@@ -41,7 +48,7 @@ export default function Metrics() {
         <div className="rounded-lg border bg-card p-4"><h2 className="mb-4 text-sm font-medium">Conformidade por cliente</h2><div className="h-72"><ResponsiveContainer><BarChart data={compliance} layout="vertical" margin={{ left: 12 }}><CartesianGrid stroke="hsl(var(--border))" horizontal={false} /><XAxis type="number" domain={[0, 100]} /><YAxis dataKey="name" type="category" width={56} /><Tooltip /><Bar dataKey="conformidade" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer></div></div>
         <div className="rounded-lg border bg-card p-4 xl:col-span-2"><h2 className="mb-4 text-sm font-medium">Pendências por tipo</h2><div className="h-72"><ResponsiveContainer><BarChart data={byType}><CartesianGrid stroke="hsl(var(--border))" vertical={false} /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><Tooltip />{statusOrder.map((status) => <Bar key={status} dataKey={statusMeta[status].label} stackId="a" fill={chartColor[status]} />)}</BarChart></ResponsiveContainer></div></div>
       </section>
-      <section className="rounded-lg border bg-card p-4"><h2 className="mb-4 text-sm font-medium">Timeline de validade</h2><div className="grid grid-cols-2 gap-2 sm:grid-cols-6 lg:grid-cols-11">{timeline.map((item) => <div key={item.year} className={`rounded-md border p-3 text-center text-xs ${statusMeta[item.status].className}`}><div className="font-medium">{item.year}</div><div>{statusMeta[item.status].label}</div></div>)}</div></section>
+      <section className="rounded-lg border bg-card p-4"><h2 className="mb-4 text-sm font-medium">Timeline de validade</h2>{timeline.length ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-6 lg:grid-cols-11">{timeline.map((item) => <div key={item.year} className={`rounded-md border p-3 text-center text-xs ${statusMeta[item.status].className}`}><div className="font-medium">{item.year}</div><div>{statusMeta[item.status].label}</div></div>)}</div> : <p className="text-sm text-muted-foreground">Sem registros com ano informado para gerar a timeline.</p>}</section>
     </main>
   );
 }
