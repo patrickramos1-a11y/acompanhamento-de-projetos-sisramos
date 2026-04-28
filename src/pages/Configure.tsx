@@ -3,7 +3,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, Clock, GripVertical, Plus, Save, Trash2 } from "lucide-react";
+import { computeStatus, statusMeta, type StatusKey } from "@/lib/status";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -168,17 +169,97 @@ export default function Configure() {
             </DndContext>
           ) : <EmptyState title="Nenhum tipo de projeto cadastrado." />}
         </TabsContent>
-        <TabsContent value="settings" className="mt-4 max-w-xl space-y-4 rounded-lg border bg-card p-4">
-          <div className="space-y-2"><Label>Validade padrão em anos</Label><Input type="number" value={validity} onChange={(e) => setValidity(Number(e.target.value))} /></div>
-          <div className="space-y-2"><Label>Antecedência do alerta em anos</Label><Input type="number" value={warning} onChange={(e) => setWarning(Number(e.target.value))} /></div>
-          <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-md border border-status-ok/30 bg-status-ok/10 p-3 text-status-ok">OK</div>
-            <div className="rounded-md border border-status-warning/30 bg-status-warning/10 p-3 text-status-warning">Atenção: {warning} ano(s)</div>
-            <div className="rounded-md border border-status-overdue/30 bg-status-overdue/10 p-3 text-status-overdue">Defasado após {validity} ano(s)</div>
+        <TabsContent value="settings" className="mt-4 max-w-2xl space-y-5 rounded-lg border bg-card p-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2"><Label>Validade padrão em anos</Label><Input type="number" min={1} value={validity} onChange={(e) => setValidity(Number(e.target.value))} /></div>
+            <div className="space-y-2"><Label>Antecedência do alerta em anos</Label><Input type="number" min={0} value={warning} onChange={(e) => setWarning(Number(e.target.value))} /></div>
           </div>
+          <ValidityPreview validity={validity} warning={warning} />
           <Button onClick={() => updateSettings.mutate({ validity_years: validity, warning_years: warning })}><Save className="h-4 w-4" />Salvar</Button>
         </TabsContent>
       </Tabs>
     </main>
+  );
+}
+
+const previewIcon: Record<StatusKey, typeof Check> = {
+  ok: Check,
+  warning: Clock,
+  overdue: AlertTriangle,
+  missing: AlertTriangle,
+  requested: Clock,
+};
+
+const previewCellClass: Record<"ok" | "warning" | "overdue", string> = {
+  ok: "border-status-ok/40 bg-status-ok/15 text-status-ok",
+  warning: "border-status-warning/40 bg-status-warning/15 text-status-warning",
+  overdue: "border-status-overdue/40 bg-status-overdue/15 text-status-overdue",
+};
+
+function ValidityPreview({ validity, warning }: { validity: number; warning: number }) {
+  const current = new Date().getFullYear();
+  const validityValid = Number.isFinite(validity) && validity >= 1;
+  const warningValid = Number.isFinite(warning) && warning >= 0;
+
+  if (!validityValid || !warningValid) {
+    return (
+      <div className="rounded-md border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+        Informe valores válidos: validade ≥ 1 e antecedência ≥ 0.
+      </div>
+    );
+  }
+
+  const years = Array.from({ length: validity + 3 }, (_, index) => current - (validity + 2) + index);
+  const config = { validity_years: validity, warning_years: warning };
+  const anoDefasado = current - validity;
+  const anoAtencao = current - (validity - warning);
+  const anoOk = anoAtencao + 1;
+  const hasWarningBand = warning < validity;
+
+  return (
+    <div className="space-y-4 rounded-lg border bg-background/40 p-4">
+      <div>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Pré-visualização da regra</p>
+        <div className="flex flex-wrap gap-1.5">
+          {years.map((year) => {
+            const status = computeStatus({ year, requested: false }, config, current) as "ok" | "warning" | "overdue";
+            const Icon = previewIcon[status] ?? Check;
+            const isToday = year === current;
+            return (
+              <div
+                key={year}
+                className={`flex min-w-[58px] flex-col items-center gap-1 rounded-md border px-2 py-2 text-xs transition-colors ${previewCellClass[status]} ${isToday ? "ring-1 ring-primary ring-offset-1 ring-offset-background" : ""}`}
+                title={`${year} — ${statusMeta[status].label}`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                <span className="font-medium leading-none">{year}</span>
+                {isToday ? <span className="text-[10px] uppercase tracking-wide opacity-80">hoje</span> : null}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <ul className="space-y-1.5 text-sm">
+        <li className="flex items-start gap-2 text-status-ok">
+          <Check className="mt-0.5 h-4 w-4 shrink-0" />
+          <span className="text-foreground">Projetos realizados em <strong className="text-status-ok">{anoOk}</strong> ou depois estão OK</span>
+        </li>
+        {hasWarningBand ? (
+          <li className="flex items-start gap-2 text-status-warning">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+            <span className="text-foreground">Projetos realizados em <strong className="text-status-warning">{anoAtencao}</strong> vencem este ano e precisam ser renovados</span>
+          </li>
+        ) : (
+          <li className="flex items-start gap-2 text-muted-foreground">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Antecedência maior ou igual à validade — nenhum ano fica em atenção.</span>
+          </li>
+        )}
+        <li className="flex items-start gap-2 text-status-overdue">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span className="text-foreground">Projetos realizados em <strong className="text-status-overdue">{anoDefasado}</strong> ou antes estão expirados</span>
+        </li>
+      </ul>
+    </div>
   );
 }
