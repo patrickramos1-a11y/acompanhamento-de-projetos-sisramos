@@ -73,18 +73,19 @@ function CreateProjectTypeDialog({ nextOrder }: { nextOrder: number }) {
   );
 }
 
-function SortableTypeRow({ type }: { type: ProjectType }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: type.id });
+function TypeRow({ type }: { type: ProjectType }) {
   const updateType = useUpdateProjectType();
   const deleteType = useDeleteProjectType();
   const [name, setName] = useState(type.name);
   const [abbr, setAbbr] = useState(type.abbreviation);
 
-  const style = { transform: CSS.Transform.toString(transform), transition };
+  useEffect(() => {
+    setName(type.name);
+    setAbbr(type.abbreviation);
+  }, [type.name, type.abbreviation]);
 
   return (
-    <div ref={setNodeRef} style={style} className="grid gap-2 rounded-lg border bg-card p-3 sm:grid-cols-[auto_1fr_120px_auto_auto] sm:items-center">
-      <button className="text-muted-foreground" {...attributes} {...listeners} type="button"><GripVertical className="h-4 w-4" /></button>
+    <div className="grid gap-2 rounded-lg border bg-card p-3 sm:grid-cols-[1fr_120px_auto_auto] sm:items-center">
       <Input value={name} onChange={(e) => setName(e.target.value)} />
       <Input value={abbr} onChange={(e) => setAbbr(e.target.value.toUpperCase())} />
       <Switch checked={type.is_active} onCheckedChange={(checked) => updateType.mutate({ id: type.id, values: { is_active: checked } })} />
