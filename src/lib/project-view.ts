@@ -1,5 +1,5 @@
 import { Client, ProjectRecord, ProjectType, Settings } from "@/hooks/useProjectData";
-import { complianceScore, computeStatus, StatusKey, worstStatus } from "@/lib/status";
+import { complianceScore, computeStatus, StatusKey, statusMeta, worstStatus } from "@/lib/status";
 
 export function recordsForClient(records: ProjectRecord[], clientId: string) {
   return records.filter((record) => record.client_id === clientId);
