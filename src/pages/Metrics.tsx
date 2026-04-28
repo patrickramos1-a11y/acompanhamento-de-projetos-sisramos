@@ -16,7 +16,7 @@ const chartColor: Record<string, string> = {
 };
 
 export default function Metrics() {
-  const { clients, projectTypes, records, settings, isLoading } = usePlatformData();
+  const { clients, projectTypes, records, settings, responsibles, isLoading } = usePlatformData();
   if (isLoading) return <PageSkeleton />;
   const config = settings.data;
   if (!config) return <EmptyState title="Não foi possível carregar as métricas." />;
@@ -54,6 +54,40 @@ export default function Metrics() {
         });
       })()
     : [];
+
+  const allResponsibles = responsibles.data ?? [];
+  const responsibleLoad = allResponsibles
+    .map((r) => {
+      const assigned = allRecords.filter(
+        (rec) => (rec as any).planned === true && (rec as any).responsible_id === r.id,
+      );
+      let plannedCount = 0;
+      let lateCount = 0;
+      const plannedAbbrs: string[] = [];
+      const lateAbbrs: string[] = [];
+      for (const rec of assigned) {
+        const status = computeStatus(rec, config);
+        const abbr = rec.project_types?.abbreviation ?? "—";
+        if (status === "late") {
+          lateCount += 1;
+          lateAbbrs.push(abbr);
+        } else if (status === "planned") {
+          plannedCount += 1;
+          plannedAbbrs.push(abbr);
+        }
+      }
+      return {
+        id: r.id,
+        name: r.name,
+        planned: plannedCount,
+        late: lateCount,
+        total: plannedCount + lateCount,
+        plannedAbbrs,
+        lateAbbrs,
+      };
+    })
+    .filter((entry) => entry.total > 0)
+    .sort((a, b) => b.total - a.total);
 
   return (
     <main className="space-y-5">
