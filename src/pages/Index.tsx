@@ -1,44 +1,66 @@
 import { useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Filter, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 import { ClientCard } from "@/components/project/ClientCard";
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
 import { CreateClientDialog } from "@/pages/Configure";
 import { usePlatformData } from "@/hooks/useProjectData";
 import { statusMeta, StatusKey } from "@/lib/status";
 import { recordsForClient, statusForClient } from "@/lib/project-view";
+import { cn } from "@/lib/utils";
 
 const filters: (StatusKey | "all")[] = ["all", "overdue", "warning", "missing", "requested", "ok"];
 
-type SortMode = "critical" | "alpha" | "scoreAsc" | "scoreDesc";
+type SortMode = "critical" | "alpha" | "alphaDesc" | "scoreAsc" | "scoreDesc";
 
 export default function Index() {
   const { clients, projectTypes, records, settings, isLoading, error } = usePlatformData();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
   const [sort, setSort] = useState<SortMode>("critical");
+  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
+  const [typeFilterOpen, setTypeFilterOpen] = useState(false);
 
   const types = projectTypes.data ?? [];
   const allRecords = records.data ?? [];
   const config = settings.data;
 
+  const sortedTypes = useMemo(
+    () => [...types].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
+    [types],
+  );
+
+  const toggleType = (id: string) =>
+    setSelectedTypeIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
   const rows = useMemo(() => {
     if (!config) return [];
     return (clients.data ?? [])
       .map((client) => ({ client, ...statusForClient(client, types, allRecords, config) }))
-      .filter(({ client, worst }) => {
+      .filter(({ client }) => {
         const matchesSearch = `${client.name} ${client.code ?? ""}`.toLowerCase().includes(search.toLowerCase());
-        return matchesSearch && (statusFilter === "all" || worst === statusFilter);
+        if (!matchesSearch) return false;
+        if (selectedTypeIds.length > 0) {
+          const clientRecords = recordsForClient(allRecords, client.id);
+          const hasAny = clientRecords.some((r) => selectedTypeIds.includes(r.project_type_id));
+          if (!hasAny) return false;
+        }
+        return true;
       })
+      .filter(({ worst }) => statusFilter === "all" || worst === statusFilter)
       .sort((a, b) => {
         if (sort === "alpha") return a.client.name.localeCompare(b.client.name);
+        if (sort === "alphaDesc") return b.client.name.localeCompare(a.client.name);
         if (sort === "scoreAsc") return a.score - b.score;
         if (sort === "scoreDesc") return b.score - a.score;
         return statusMeta[b.worst].rank - statusMeta[a.worst].rank || a.client.name.localeCompare(b.client.name);
       });
-  }, [clients.data, types, allRecords, config, search, statusFilter, sort]);
+  }, [clients.data, types, allRecords, config, search, statusFilter, sort, selectedTypeIds]);
 
   if (isLoading) return <PageSkeleton />;
   if (error || !config) return <EmptyState title="Não foi possível carregar os dados." />;
@@ -76,11 +98,76 @@ export default function Index() {
           <SelectTrigger className="w-full lg:w-56"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="critical">Críticos primeiro</SelectItem>
-            <SelectItem value="alpha">Alfabética</SelectItem>
+            <SelectItem value="alpha">Alfabética (A-Z)</SelectItem>
+            <SelectItem value="alphaDesc">Alfabética (Z-A)</SelectItem>
             <SelectItem value="scoreAsc">Menor conformidade</SelectItem>
             <SelectItem value="scoreDesc">Maior conformidade</SelectItem>
           </SelectContent>
         </Select>
+        <Popover open={typeFilterOpen} onOpenChange={setTypeFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-between lg:w-64">
+              <span className="flex items-center gap-2 truncate">
+                <Filter className="h-4 w-4" />
+                {selectedTypeIds.length === 0 ? (
+                  "Filtrar por projeto"
+                ) : (
+                  <>
+                    Projetos
+                    <Badge variant="secondary" className="ml-1">{selectedTypeIds.length}</Badge>
+                  </>
+                )}
+              </span>
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar projeto..." />
+              <CommandList>
+                <CommandEmpty>Nenhum projeto encontrado.</CommandEmpty>
+                <CommandGroup>
+                  {sortedTypes.map((type) => {
+                    const checked = selectedTypeIds.includes(type.id);
+                    return (
+                      <CommandItem
+                        key={type.id}
+                        value={`${type.name} ${type.abbreviation ?? ""}`}
+                        onSelect={() => toggleType(type.id)}
+                      >
+                        <div
+                          className={cn(
+                            "mr-2 flex h-4 w-4 items-center justify-center rounded border",
+                            checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40",
+                          )}
+                        >
+                          {checked && <Check className="h-3 w-3" />}
+                        </div>
+                        <span className="flex-1 truncate">{type.name}</span>
+                        {type.abbreviation && (
+                          <span className="ml-2 text-xs text-muted-foreground">{type.abbreviation}</span>
+                        )}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+              {selectedTypeIds.length > 0 && (
+                <div className="border-t p-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-center"
+                    onClick={() => setSelectedTypeIds([])}
+                  >
+                    <X className="h-4 w-4" />
+                    Limpar seleção
+                  </Button>
+                </div>
+              )}
+            </Command>
+          </PopoverContent>
+        </Popover>
         <div className="flex flex-wrap gap-1">
           {filters.map((filter) => (
             <Button key={filter} variant={statusFilter === filter ? "default" : "outline"} size="sm" onClick={() => setStatusFilter(filter)}>
