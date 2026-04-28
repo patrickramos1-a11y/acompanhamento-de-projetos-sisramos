@@ -18,6 +18,7 @@ type Props = {
   types: ProjectType[];
   records: ProjectRecord[];
   settings: Settings;
+  highlightResponsibleId?: string | null;
 };
 
 function scoreTone(score: number) {
@@ -63,7 +64,7 @@ function chipIcon(status: StatusKey) {
   return null;
 }
 
-export function ClientCard({ client, types, records, settings }: Props) {
+export function ClientCard({ client, types, records, settings, highlightResponsibleId }: Props) {
   const recordsByType = new Map(records.map((record) => [record.project_type_id, record]));
 
   const items = types
@@ -166,6 +167,10 @@ export function ClientCard({ client, types, records, settings }: Props) {
           {items.map(({ type, record, status }) => {
             const until = validUntil(record.year, settings);
             const meta = statusMeta[status];
+            const isHighlighted =
+              !!highlightResponsibleId &&
+              status === "planned" &&
+              (record as any).responsible_id === highlightResponsibleId;
             return (
               <Tooltip key={type.id}>
                 <TooltipTrigger asChild>
@@ -173,8 +178,10 @@ export function ClientCard({ client, types, records, settings }: Props) {
                     className={cn(
                       "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium",
                       chipClass(status),
+                      isHighlighted && "ring-1 ring-status-planned/70 ring-offset-1 ring-offset-card",
                     )}
                   >
+                    {isHighlighted && <span className="h-1.5 w-1.5 rounded-full bg-status-planned" aria-hidden />}
                     {chipIcon(status)}
                     <span>{type.abbreviation}</span>
                     {status === "ok" && record.year ? <span className="opacity-80">· {record.year}</span> : null}

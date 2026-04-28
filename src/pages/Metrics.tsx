@@ -16,7 +16,7 @@ const chartColor: Record<string, string> = {
 };
 
 export default function Metrics() {
-  const { clients, projectTypes, records, settings, isLoading } = usePlatformData();
+  const { clients, projectTypes, records, settings, responsibles, isLoading } = usePlatformData();
   if (isLoading) return <PageSkeleton />;
   const config = settings.data;
   if (!config) return <EmptyState title="Não foi possível carregar as métricas." />;
@@ -54,6 +54,40 @@ export default function Metrics() {
         });
       })()
     : [];
+
+  const allResponsibles = responsibles.data ?? [];
+  const responsibleLoad = allResponsibles
+    .map((r) => {
+      const assigned = allRecords.filter(
+        (rec) => (rec as any).planned === true && (rec as any).responsible_id === r.id,
+      );
+      let plannedCount = 0;
+      let lateCount = 0;
+      const plannedAbbrs: string[] = [];
+      const lateAbbrs: string[] = [];
+      for (const rec of assigned) {
+        const status = computeStatus(rec, config);
+        const abbr = rec.project_types?.abbreviation ?? "—";
+        if (status === "late") {
+          lateCount += 1;
+          lateAbbrs.push(abbr);
+        } else if (status === "planned") {
+          plannedCount += 1;
+          plannedAbbrs.push(abbr);
+        }
+      }
+      return {
+        id: r.id,
+        name: r.name,
+        planned: plannedCount,
+        late: lateCount,
+        total: plannedCount + lateCount,
+        plannedAbbrs,
+        lateAbbrs,
+      };
+    })
+    .filter((entry) => entry.total > 0)
+    .sort((a, b) => b.total - a.total);
 
   return (
     <main className="space-y-5">
@@ -113,6 +147,58 @@ export default function Metrics() {
         <div className="rounded-lg border bg-card p-4 xl:col-span-2"><h2 className="mb-4 text-sm font-medium">Pendências por tipo</h2><div className="h-72"><ResponsiveContainer><BarChart data={byType}><CartesianGrid stroke="hsl(var(--border))" vertical={false} /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><Tooltip />{statusOrder.map((status) => <Bar key={status} dataKey={statusMeta[status].label} stackId="a" fill={chartColor[status]} />)}</BarChart></ResponsiveContainer></div></div>
       </section>
       <section className="rounded-lg border bg-card p-4"><h2 className="mb-4 text-sm font-medium">Timeline de validade</h2>{timeline.length ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-6 lg:grid-cols-11">{timeline.map((item) => <div key={item.year} className={`rounded-md border p-3 text-center text-xs ${statusMeta[item.status].className}`}><div className="font-medium">{item.year}</div><div>{statusMeta[item.status].label}</div></div>)}</div> : <p className="text-sm text-muted-foreground">Sem registros com ano informado para gerar a timeline.</p>}</section>
+
+      <section className="rounded-lg border bg-card p-4">
+        <h2 className="mb-4 text-sm font-medium">Carga por Responsável</h2>
+        {responsibleLoad.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum projeto planejado atribuído ainda.</p>
+        ) : (
+          <div style={{ height: Math.max(180, responsibleLoad.length * 44 + 40) }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={responsibleLoad} layout="vertical" margin={{ top: 0, right: 32, left: 8, bottom: 0 }} barCategoryGap={8}>
+                <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={Math.min(160, Math.max(60, responsibleLoad.reduce((m, e) => Math.max(m, e.name.length), 0) * 7 + 12))}
+                  tick={{ fontSize: 11 }}
+                  interval={0}
+                />
+                <Tooltip
+                  cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+                  contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const entry = payload[0].payload as typeof responsibleLoad[number];
+                    return (
+                      <div className="rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
+                        <p className="font-medium text-foreground">{entry.name}</p>
+                        <p className="text-muted-foreground">Total: {entry.total}</p>
+                        <p className="text-status-planned">
+                          No prazo: {entry.planned}{entry.plannedAbbrs.length ? ` · ${entry.plannedAbbrs.join(", ")}` : ""}
+                        </p>
+                        <p className="text-status-late">
+                          Atrasados: {entry.late}{entry.lateAbbrs.length ? ` · ${entry.lateAbbrs.join(", ")}` : ""}
+                        </p>
+                      </div>
+                    );
+                  }}
+                />
+                <Bar dataKey="planned" name="No prazo" stackId="a" fill="hsl(var(--status-planned))" radius={[0, 0, 0, 0]} barSize={22} isAnimationActive={false} />
+                <Bar dataKey="late" name="Atrasado" stackId="a" fill="hsl(var(--status-late))" radius={[0, 4, 4, 0]} barSize={22} isAnimationActive={false}>
+                  <LabelList
+                    dataKey="total"
+                    position="right"
+                    formatter={(v: number) => v}
+                    style={{ fill: "hsl(var(--foreground))", fontSize: 11 }}
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </section>
     </main>
   );
 }

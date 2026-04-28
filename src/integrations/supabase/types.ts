@@ -52,6 +52,7 @@ export type Database = {
           planned_for: string | null
           project_type_id: string
           requested: boolean
+          responsible_id: string | null
           updated_at: string
           year: number | null
         }
@@ -65,6 +66,7 @@ export type Database = {
           planned_for?: string | null
           project_type_id: string
           requested?: boolean
+          responsible_id?: string | null
           updated_at?: string
           year?: number | null
         }
@@ -78,6 +80,7 @@ export type Database = {
           planned_for?: string | null
           project_type_id?: string
           requested?: boolean
+          responsible_id?: string | null
           updated_at?: string
           year?: number | null
         }
@@ -94,6 +97,13 @@ export type Database = {
             columns: ["project_type_id"]
             isOneToOne: false
             referencedRelation: "project_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_records_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "responsibles"
             referencedColumns: ["id"]
           },
         ]
@@ -123,6 +133,27 @@ export type Database = {
           display_order?: number
           id?: string
           is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      responsibles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
           name?: string
           updated_at?: string
         }
