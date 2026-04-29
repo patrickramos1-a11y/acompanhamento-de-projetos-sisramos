@@ -30,12 +30,12 @@ export default function ClientDetail() {
   const missingColSpan = hasAnyResponsible ? 6 : 5;
 
   return (
-    <main className="space-y-5">
-      <Button variant="ghost" asChild><Link to="/"><ArrowLeft className="h-4 w-4" />Painel</Link></Button>
-      <header className="rounded-lg border bg-card p-5">
+    <main className="space-y-4 sm:space-y-5">
+      <Button variant="ghost" asChild className="-ml-2"><Link to="/"><ArrowLeft className="h-4 w-4" />Painel</Link></Button>
+      <header className="rounded-lg border bg-card p-4 sm:p-5">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
           <div>
-            <h1 className="text-2xl font-semibold tracking-normal">{client.name}</h1>
+            <h1 className="text-xl font-semibold tracking-normal sm:text-2xl">{client.name}</h1>
           </div>
           <div className="w-full md:w-64">
             <div className="mb-2 flex justify-between text-sm"><span>Conformidade</span><strong>{score}%</strong></div>
@@ -44,7 +44,66 @@ export default function ClientDetail() {
         </div>
       </header>
 
-      <section className="overflow-hidden rounded-lg border bg-card">
+      {/* Mobile: card list */}
+      <section className="space-y-2 md:hidden">
+        {rows.map(({ type, record, status }) => {
+          const until = record ? validUntil(record.year, config) : null;
+          const rid = record ? ((record as any).responsible_id as string | null) : null;
+          const r = rid ? responsibleMap.get(rid) : undefined;
+          return (
+            <div key={type.id} className="rounded-lg border bg-card p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{type.name}</p>
+                  <p className="text-xs text-muted-foreground">{type.abbreviation}</p>
+                </div>
+                <StatusBadge status={status} />
+              </div>
+              {record ? (
+                <>
+                  <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                    <div>
+                      <dt className="text-muted-foreground">Ano</dt>
+                      <dd>{record.year ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Válido até</dt>
+                      <dd>{until ?? "—"}</dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Situação</dt>
+                      <dd>{statusDistance(record, config)}</dd>
+                    </div>
+                    {r ? (
+                      <div className="col-span-2">
+                        <dt className="text-muted-foreground">Responsável</dt>
+                        <dd className="mt-0.5 flex items-center gap-2">
+                          <ResponsibleAvatar name={r.name} color={(r as any).color ?? "#3b82f6"} size={20} withTooltip={false} />
+                          <span>{r.name}</span>
+                        </dd>
+                      </div>
+                    ) : null}
+                    {record.notes ? (
+                      <div className="col-span-2">
+                        <dt className="text-muted-foreground">Observações</dt>
+                        <dd className="line-clamp-2">{record.notes}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  <div className="mt-3">
+                    <RecordEditor record={record} trigger={<Button variant="outline" size="sm" className="w-full">Editar</Button>} />
+                  </div>
+                </>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">Registro ainda não criado.</p>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+      {/* Desktop: table */}
+      <section className="hidden overflow-hidden rounded-lg border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
