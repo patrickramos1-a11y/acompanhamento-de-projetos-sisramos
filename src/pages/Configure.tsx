@@ -278,18 +278,20 @@ export default function Configure() {
   if (isLoading) return <PageSkeleton />;
 
   return (
-    <main className="space-y-5">
+    <main className="space-y-4 sm:space-y-5">
       <header>
-        <h1 className="text-2xl font-semibold tracking-normal">Configurar</h1>
-        <p className="text-sm text-muted-foreground">Clientes, tipos de projeto, responsáveis e regra de validade.</p>
+        <h1 className="text-xl font-semibold tracking-normal sm:text-2xl">Configurar</h1>
+        <p className="text-xs text-muted-foreground sm:text-sm">Clientes, tipos de projeto, responsáveis e regra de validade.</p>
       </header>
       <Tabs defaultValue="clients">
-        <TabsList>
-          <TabsTrigger value="clients">Clientes</TabsTrigger>
-          <TabsTrigger value="types">Tipos</TabsTrigger>
-          <TabsTrigger value="responsibles">Responsáveis</TabsTrigger>
-          <TabsTrigger value="settings">Gerais</TabsTrigger>
-        </TabsList>
+        <div className="-mx-4 overflow-x-auto px-4 scrollbar-hide sm:mx-0 sm:px-0">
+          <TabsList className="w-max">
+            <TabsTrigger value="clients">Clientes</TabsTrigger>
+            <TabsTrigger value="types">Tipos</TabsTrigger>
+            <TabsTrigger value="responsibles">Responsáveis</TabsTrigger>
+            <TabsTrigger value="settings">Gerais</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="clients" className="mt-4 space-y-3">
           <div className="flex justify-end"><CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} /></div>
           {sortedClients.length ? sortedClients.map((client) => (
