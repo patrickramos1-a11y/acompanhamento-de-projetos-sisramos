@@ -99,7 +99,7 @@ export default function Metrics() {
         <div className="rounded-lg border bg-card p-3 sm:p-4">
           <h2 className="mb-3 text-sm font-medium sm:mb-4">Distribuição global</h2>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="flex-1" style={{ height: 240 }}>
+            <div className="h-[240px] w-full sm:flex-1">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={distribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={52} outerRadius={84}>
