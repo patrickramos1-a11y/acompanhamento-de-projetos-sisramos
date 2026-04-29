@@ -144,95 +144,114 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
 
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 8 }, (_, i) => String(currentYear + i));
+  const isMobile = useIsMobile();
+
+  const formContent = (
+    <form className="space-y-4" onSubmit={submit}>
+      {/* Não aplicável */}
+      <div className={cn(
+        "flex items-start justify-between gap-3 rounded-md border p-3",
+        notApplicable ? "border-status-na/40 bg-muted/30" : "border-border",
+      )}>
+        <div className="flex-1">
+          <Label className="text-sm font-medium">Não aplicável</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">Este projeto não é exigido para este cliente</p>
+        </div>
+        <Switch checked={notApplicable} onCheckedChange={handleNotApplicable} />
+      </div>
+
+      <div className={cn("space-y-4", notApplicable && "opacity-50 pointer-events-none")}>
+        <div className="space-y-2">
+          <Label>Ano concluído</Label>
+          <Input
+            inputMode="numeric"
+            placeholder="Ex: 2024"
+            value={year}
+            onChange={(event) => setYear(event.target.value.replace(/\D/g, "").slice(0, 4))}
+            disabled={notApplicable}
+          />
+        </div>
+
+        <div className="flex items-center justify-between rounded-md border border-border p-3">
+          <Label>Solicitado</Label>
+          <Switch checked={requested} onCheckedChange={handleRequested} disabled={notApplicable} />
+        </div>
+
+        <div className={cn(
+          "rounded-md border p-3 space-y-3",
+          planned ? "border-status-planned/40 bg-status-planned/5" : "border-border",
+        )}>
+          <div className="flex items-center justify-between">
+            <Label>Planejado</Label>
+            <Switch checked={planned} onCheckedChange={handlePlanned} disabled={notApplicable} />
+          </div>
+          {planned && (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Previsão de entrega</Label>
+                <div className="flex gap-2">
+                  <Select value={plannedMonth} onValueChange={setPlannedMonth} disabled={notApplicable}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="Mês" /></SelectTrigger>
+                    <SelectContent>
+                      {months.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={plannedYear} onValueChange={setPlannedYear} disabled={notApplicable}>
+                    <SelectTrigger className="w-28"><SelectValue placeholder="Ano" /></SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Responsável</Label>
+                <Select value={responsibleId} onValueChange={setResponsibleId} disabled={notApplicable}>
+                  <SelectTrigger><SelectValue placeholder="Sem responsável" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem responsável</SelectItem>
+                    {responsibles.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Observações</Label>
+        <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
+      </div>
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
+
+      <Button className="w-full" disabled={updateRecord.isPending}>
+        <Save className="h-4 w-4" />
+        Salvar
+      </Button>
+    </form>
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>{trigger ?? <Button variant="outline" size="sm">Editar</Button>}</SheetTrigger>
+        <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-xl p-4 safe-pb">
+          <SheetHeader className="mb-3 text-left">
+            <SheetTitle>Editar registro</SheetTitle>
+          </SheetHeader>
+          {formContent}
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger ?? <Button variant="outline" size="sm">Editar</Button>}</PopoverTrigger>
       <PopoverContent align="end" collisionPadding={16} className="w-96 max-h-[var(--radix-popover-content-available-height)] overflow-y-auto">
-        <form className="space-y-4" onSubmit={submit}>
-          {/* Não aplicável */}
-          <div className={cn(
-            "flex items-start justify-between gap-3 rounded-md border p-3",
-            notApplicable ? "border-status-na/40 bg-muted/30" : "border-border",
-          )}>
-            <div className="flex-1">
-              <Label className="text-sm font-medium">Não aplicável</Label>
-              <p className="mt-0.5 text-xs text-muted-foreground">Este projeto não é exigido para este cliente</p>
-            </div>
-            <Switch checked={notApplicable} onCheckedChange={handleNotApplicable} />
-          </div>
-
-          <div className={cn("space-y-4", notApplicable && "opacity-50 pointer-events-none")}>
-            <div className="space-y-2">
-              <Label>Ano concluído</Label>
-              <Input
-                inputMode="numeric"
-                placeholder="Ex: 2024"
-                value={year}
-                onChange={(event) => setYear(event.target.value.replace(/\D/g, "").slice(0, 4))}
-                disabled={notApplicable}
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-md border border-border p-3">
-              <Label>Solicitado</Label>
-              <Switch checked={requested} onCheckedChange={handleRequested} disabled={notApplicable} />
-            </div>
-
-            <div className={cn(
-              "rounded-md border p-3 space-y-3",
-              planned ? "border-status-planned/40 bg-status-planned/5" : "border-border",
-            )}>
-              <div className="flex items-center justify-between">
-                <Label>Planejado</Label>
-                <Switch checked={planned} onCheckedChange={handlePlanned} disabled={notApplicable} />
-              </div>
-              {planned && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Previsão de entrega</Label>
-                    <div className="flex gap-2">
-                      <Select value={plannedMonth} onValueChange={setPlannedMonth} disabled={notApplicable}>
-                        <SelectTrigger className="flex-1"><SelectValue placeholder="Mês" /></SelectTrigger>
-                        <SelectContent>
-                          {months.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Select value={plannedYear} onValueChange={setPlannedYear} disabled={notApplicable}>
-                        <SelectTrigger className="w-28"><SelectValue placeholder="Ano" /></SelectTrigger>
-                        <SelectContent>
-                          {yearOptions.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Responsável</Label>
-                    <Select value={responsibleId} onValueChange={setResponsibleId} disabled={notApplicable}>
-                      <SelectTrigger><SelectValue placeholder="Sem responsável" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sem responsável</SelectItem>
-                        {responsibles.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Observações</Label>
-            <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
-          </div>
-
-          {error && <p className="text-xs text-destructive">{error}</p>}
-
-          <Button className="w-full" size="sm" disabled={updateRecord.isPending}>
-            <Save className="h-4 w-4" />
-            Salvar
-          </Button>
-        </form>
+        {formContent}
       </PopoverContent>
     </Popover>
   );
