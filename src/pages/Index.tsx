@@ -31,6 +31,7 @@ export default function Index() {
   const [typeFilterOpen, setTypeFilterOpen] = useState(false);
   const [responsibleFilters, setResponsibleFilters] = useState<string[]>([]);
   const [responsibleFilterOpen, setResponsibleFilterOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const types = projectTypes.data ?? [];
   const allRecords = records.data ?? [];
