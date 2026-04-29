@@ -84,19 +84,24 @@ function TypeRow({ type }: { type: ProjectType }) {
   }, [type.name, type.abbreviation]);
 
   return (
-    <div className="grid gap-2 rounded-lg border bg-card p-3 sm:grid-cols-[1fr_120px_auto_auto] sm:items-center">
-      <Input value={name} onChange={(e) => setName(e.target.value)} />
-      <Input value={abbr} onChange={(e) => setAbbr(e.target.value.toUpperCase())} />
-      <Switch checked={type.is_active} onCheckedChange={(checked) => updateType.mutate({ id: type.id, values: { is_active: checked } })} />
-      <div className="flex gap-2">
-        <Button size="icon" variant="outline" onClick={() => updateType.mutate({ id: type.id, values: { name, abbreviation: abbr.toUpperCase() } })}><Save className="h-4 w-4" /></Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild><Button size="icon" variant="destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader><AlertDialogTitle>Excluir tipo?</AlertDialogTitle><AlertDialogDescription>Os registros vinculados também serão removidos.</AlertDialogDescription></AlertDialogHeader>
-            <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => deleteType.mutate(type.id)}>Excluir</AlertDialogAction></AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+    <div className="rounded-lg border bg-card p-3 space-y-2 sm:grid sm:grid-cols-[1fr_120px_auto_auto] sm:items-center sm:gap-2 sm:space-y-0">
+      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" />
+      <Input value={abbr} onChange={(e) => setAbbr(e.target.value.toUpperCase())} placeholder="Sigla" />
+      <div className="flex items-center justify-between gap-2 sm:contents">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground sm:hidden">
+          Ativo
+        </div>
+        <Switch checked={type.is_active} onCheckedChange={(checked) => updateType.mutate({ id: type.id, values: { is_active: checked } })} />
+        <div className="flex gap-2">
+          <Button size="icon" variant="outline" onClick={() => updateType.mutate({ id: type.id, values: { name, abbreviation: abbr.toUpperCase() } })}><Save className="h-4 w-4" /></Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild><Button size="icon" variant="destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader><AlertDialogTitle>Excluir tipo?</AlertDialogTitle><AlertDialogDescription>Os registros vinculados também serão removidos.</AlertDialogDescription></AlertDialogHeader>
+              <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => deleteType.mutate(type.id)}>Excluir</AlertDialogAction></AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
     </div>
   );
