@@ -1,75 +1,103 @@
-## Refino visual dos chips e rodapé no ClientCard
+# Refatoração Mobile-First da Plataforma
 
-Todas as mudanças ficam em `src/components/project/ClientCard.tsx`. Sem migrações, sem novos componentes.
+Hoje a plataforma é desktop-first e tem vários pontos quebrados ou desconfortáveis no mobile (≤ 768px): sidebar consumindo altura no topo, tabela com scroll horizontal sem affordance, barra de filtros com 5 controles empilhados verticalmente, popovers/dialogs estourando viewport, alvos de toque pequenos. O objetivo é deixar toda a plataforma confortável em telas a partir de 360px sem regredir o desktop.
 
-### 1. Ícones únicos por status
+## Princípios
 
-Substituir o helper `chipIcon` para mapear cada status a um ícone distinto do `lucide-react`:
+- Mobile-first: revisar cada tela começando por 375px e depois escalar.
+- Alvos de toque mínimos 40×40px; espaçamentos em múltiplos de 4px.
+- Substituir `Table` em mobile por **lista de cards** (mantém Table em ≥ md).
+- Filtros e formulários longos viram **Sheet** (bottom sheet em mobile, lateral em desktop).
+- Tipografia escalonada: `text-xl` no mobile / `text-2xl` no desktop para títulos; respeitar 16px mínimo em inputs (evita zoom no iOS).
+- Safe-area: usar `env(safe-area-inset-*)` no rodapé fixo.
 
-- `ok` → `CheckCircle2`
-- `warning` → `Clock`
-- `overdue` → `AlertTriangle`
-- `late` → `AlarmClock`
-- `planned` → `CalendarClock`
-- `requested` → `RefreshCw`
-- `missing` → `Minus`
-- `na` → `Ban`
+## Mudanças por área
 
-Todos renderizados em `h-3 w-3` (a cor vem do `chipClass`, herdando `currentColor`). Imports atualizados para incluir `CheckCircle2`, `CalendarClock`, `RefreshCw`, `Minus`, `Ban` e remover `Calendar`/`RotateCw`.
+### 1. AppShell — Navegação
 
-### 2. Conteúdo do chip (sem texto verbal de status)
+Hoje o sidebar vira uma faixa horizontal no topo do mobile, ocupando espaço e com labels escondidas em telas estreitas.
 
-Hoje há um `· atrasado` literal e nenhum dado de mês para late, e nada para warning. Ajustar a renderização interna do chip para:
+- Mobile (< lg): **bottom navigation bar fixa** (3 itens: Painel, Métricas, Configurar), 56px de altura, ícone + label, com safe-area-inset-bottom. Header superior compacto (48px) só com logo e título da rota corrente.
+- Desktop (≥ lg): mantém sidebar lateral 240px como hoje.
+- Padding-bottom no `<main>` para não ficar atrás da bottom-nav.
 
-- `ok`: mostrar `· {record.year}` quando houver
-- `warning`: mostrar `· {record.year}` quando houver (novo)
-- `overdue`: somente abreviação
-- `late`: mostrar `· {formatPlannedFor(planned_for)}` (substituindo o `· atrasado` atual)
-- `planned`: mostrar `· {formatPlannedFor(planned_for)}` (já existe)
-- `requested`, `missing`, `na`: somente abreviação
+### 2. Painel (`Index.tsx`)
 
-O dado contextual continua com `opacity-80`. A abreviação fica em `<span class="truncate">` para nunca quebrar linha.
+Problemas atuais: barra de filtros com 5 controles empilhados ocupa ~400px verticais; cards de KPI em 1 coluna ficam enormes; busca + ordenação + 3 popovers atrapalham o fluxo.
 
-### 3. Estilo unificado dos chips + peso por criticidade
+- KPIs: grid `grid-cols-2` em mobile (4 cards principais), com "Conformidade média" em destaque ocupando linha inteira no topo. Tipografia menor (text-xl).
+- Barra de ações: busca sempre visível em linha própria. Logo abaixo, **um único botão "Filtros"** que abre um **Sheet bottom** consolidando: ordenação (chips), tipos de projeto, status, responsáveis. Badge no botão indica quantidade de filtros ativos. Botão "Limpar todos" no rodapé do sheet.
+- Cards de cliente: continuam em `grid-cols-1` no mobile, mas com padding interno reduzido (p-4) e chips em fonte 11px (já estão).
+- FAB "Novo cliente" no canto inferior direito em mobile (acima da bottom-nav), substituindo o botão do header que fica oculto.
 
-Reescrever `chipClass` para que todos os estilos usem **borda sólida** e cores explícitas, removendo o `border-dashed` de `missing` e `na`. As classes base do chip passam a ser fixas (height, padding, min-width, truncamento) e a borda crítica vira modificador:
+### 3. Detalhe do Cliente (`ClientDetail.tsx`)
 
-Classe base aplicada a todos os chips (substitui o atual `inline-flex h-7 ... px-2`):
+Problema atual: a `Table` força scroll horizontal e fica ilegível.
 
-```
-inline-flex items-center gap-1.5 rounded-md text-[11px] font-medium
-h-7 min-w-[48px] px-1.5 py-1 max-w-full
-```
+- Mobile (< md): renderizar cada linha como **card** com layout vertical:
+  - Linha 1: nome do tipo + StatusBadge à direita.
+  - Linha 2: chips de "Ano · Válido até · Situação".
+  - Linha 3 (opcional): avatar + nome do responsável.
+  - Linha 4 (opcional): observações truncadas em 2 linhas.
+  - Botão "Editar" full-width no rodapé do card.
+- Desktop (≥ md): mantém `Table` como hoje.
+- Header: stack vertical em mobile, score em destaque com barra full-width.
 
-(`h-7` = 28px; `px-1.5` = 6px; `py-1` = 4px; `min-w-[48px]` = 48px.)
+### 4. RecordEditor
 
-`chipClass` por status (todas com `border` simples = 1px):
+Problema: `Popover` de 384px de largura estoura em telas < 400px.
 
-- `overdue`: `bg-[#2b0d0d] border-[#4a1a1a] text-[#f5a3a3] border-2` (2px)
-- `late`: `bg-status-late/10 border-status-late/35 text-status-late border-2` (2px)
-- `warning`: `bg-[#2b1f0d] border-[#4a3515] text-[#f5d27a] border`
-- `ok`: `bg-[#0d2b1f] border-[#1a4a35] text-[#86e2b8] border`
-- `requested`: `bg-[#0d1a2b] border-[#1a3050] text-[#8cc4f5] border`
-- `planned`: `bg-status-planned/10 border-status-planned/35 text-status-planned border`
-- `missing`: `bg-[#1e1e2a] border-[#3a3a4a] text-muted-foreground border` (sólido, sem dashed)
-- `na`: `bg-transparent border-[#1f1f2a] text-muted-foreground/40 opacity-70 border` (sólido)
+- Mobile: trocar `Popover` por **Sheet** ascendente (bottom sheet) com altura adaptativa e scroll interno. Botão "Salvar" sticky no rodapé.
+- Desktop: mantém `Popover` atual.
+- Inputs com `text-base` (16px) para evitar zoom iOS.
 
-Como `border-2` sobrescreve o `border` base apenas onde aplicado, mantemos 1px nos demais.
+### 5. Configurar
 
-A abreviação ganha `truncate`; o dado contextual fica `whitespace-nowrap` para não quebrar.
+Problemas: `TabsList` com 4 abas estoura; `ResponsibleRow` em grid 5-col fica apertada; `ClientRow` perde o botão de salvar.
 
-### 4. Rodapé mais sutil
+- `TabsList`: scroll horizontal em mobile (snap), com sombra de fade nas bordas.
+- Linhas (`TypeRow`, `ClientRow`, `ResponsibleRow`): em mobile, layout em 2 linhas — primeira com avatar/nome editável, segunda com ações (switch + salvar + excluir) alinhadas à direita. Botões de ação 40×40px.
+- Color picker: aumentar área clicável para 36×36px.
+- Aba "Gerais": preview de validade rola horizontalmente em mobile; explicação em accordion para reduzir altura inicial.
 
-No bloco de rodapé condicional:
+### 6. Métricas
 
-- Container: trocar `border-border/40` por `border-border/20` (linha mais discreta) e manter `pt-2.5`.
-- Cada `<p>` passa de `text-xs text-status-*` para `text-[11px] font-normal` com cores dessaturadas inline:
-  - urgente (overdue): `text-[#c45c5c]`
-  - atrasado (late): `text-[#c47a4a]` (laranja dessaturado, equivalente)
-  - vencendo (warning): `text-[#c4a85c]`
+Problemas: gráficos de barras horizontais com nomes longos ficam ilegíveis; pizza + legenda lado-a-lado quebra mal em mobile.
 
-Conteúdo dos textos permanece igual.
+- Distribuição global: pizza com legenda **abaixo** (não ao lado) em mobile.
+- Conformidade por cliente / Carga por responsável: aumentar `barCategoryGap` e altura mínima por linha (44px → 48px no mobile); truncar nomes no `YAxis` com `width` adaptativo (clamp 80–120 em mobile).
+- Pendências por tipo: altura aumentada para 320px em mobile, rotacionar labels do eixo X em -30° se houver mais de 6 tipos.
+- Timeline: já é responsiva, mas reduzir para `grid-cols-3` em mobile pequeno.
 
-### Arquivos tocados
+### 7. Diálogos e tooltips
 
-- `src/components/project/ClientCard.tsx` (único arquivo modificado)
+- Todos os `Dialog`/`AlertDialog`: aplicar `max-w-[calc(100vw-2rem)]` e `max-h-[90vh] overflow-y-auto` consistentemente.
+- Tooltips dos chips: em touch devices, garantir que aparecem no `:active`/`:focus` (radix já cobre, mas validar). Adicionar long-press visual feedback.
+
+### 8. Microajustes globais
+
+- `index.css`: adicionar `html { -webkit-text-size-adjust: 100%; }` e safe-area em `body`.
+- `tailwind.config.ts`: adicionar breakpoint `xs: 360px` se necessário para casos extremos.
+- Criar utilitário `useIsMobile` já existente — usar consistentemente em vez de duplicar lógica.
+
+## Arquivos afetados
+
+- `src/components/project/AppShell.tsx` (reescrita para bottom-nav mobile)
+- `src/pages/Index.tsx` (sheet de filtros + FAB + KPIs reorganizados)
+- `src/pages/ClientDetail.tsx` (cards em mobile, Table em desktop)
+- `src/pages/Configure.tsx` (linhas responsivas, tabs com scroll)
+- `src/pages/Metrics.tsx` (gráficos com legenda abaixo / alturas adaptativas)
+- `src/components/project/RecordEditor.tsx` (Sheet em mobile, Popover em desktop)
+- `src/components/project/ClientCard.tsx` (ajustes finos de padding mobile)
+- `src/index.css` (safe-area, text-size-adjust)
+- Possivelmente novo: `src/components/project/MobileFiltersSheet.tsx` para extrair o sheet de filtros do Painel.
+
+## Fora do escopo
+
+- Mudanças de comportamento/regra de negócio.
+- Redesign visual (cores, tipografia, identidade) — apenas ajustes de densidade.
+- PWA / instalação como app nativo (pode ser feito num próximo passo se desejado).
+
+## Como validar
+
+Após implementar, testar com `browser--set_viewport_size` em 375×812 (iPhone SE/13), 390×844 (iPhone 14) e 768×1024 (iPad), tirar screenshots de cada rota e validar: nenhum scroll horizontal indesejado, todos os controles a 40px+, nenhum overlay estourando viewport, bottom-nav sem cobrir conteúdo.

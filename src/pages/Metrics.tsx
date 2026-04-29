@@ -90,30 +90,33 @@ export default function Metrics() {
     .sort((a, b) => b.total - a.total);
 
   return (
-    <main className="space-y-5">
-      <header><h1 className="text-2xl font-semibold tracking-normal">Métricas</h1><p className="text-sm text-muted-foreground">Visão consolidada de status, conformidade e pendências.</p></header>
-      <section className="grid items-stretch gap-4 xl:grid-cols-2">
-        <div className="rounded-lg border bg-card p-4">
-          <h2 className="mb-4 text-sm font-medium">Distribuição global</h2>
+    <main className="space-y-4 sm:space-y-5">
+      <header>
+        <h1 className="text-xl font-semibold tracking-normal sm:text-2xl">Métricas</h1>
+        <p className="text-xs text-muted-foreground sm:text-sm">Visão consolidada de status, conformidade e pendências.</p>
+      </header>
+      <section className="grid items-stretch gap-3 sm:gap-4 xl:grid-cols-2">
+        <div className="rounded-lg border bg-card p-3 sm:p-4">
+          <h2 className="mb-3 text-sm font-medium sm:mb-4">Distribuição global</h2>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="flex-1" style={{ height: 280 }}>
-              <ResponsiveContainer width="100%" height={280}>
+            <div className="h-[240px] w-full sm:flex-1">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={distribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={62} outerRadius={96}>
+                  <Pie data={distribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={52} outerRadius={84}>
                     {distribution.map((entry) => <Cell key={entry.status} fill={chartColor[entry.status]} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <ul className="flex flex-col gap-2 sm:w-44">
+            <ul className="grid grid-cols-2 gap-2 sm:flex sm:w-44 sm:flex-col">
               {distribution.map((entry) => {
                 const total = distribution.reduce((sum, item) => sum + item.value, 0);
                 const pct = total ? Math.round((entry.value / total) * 100) : 0;
                 return (
                   <li key={entry.status} className="flex items-center gap-2 text-xs">
-                    <span className="h-3 w-3 rounded-sm" style={{ background: chartColor[entry.status] }} />
-                    <span className="flex-1 text-foreground">{entry.name}</span>
+                    <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: chartColor[entry.status] }} />
+                    <span className="flex-1 truncate text-foreground">{entry.name}</span>
                     <span className="text-muted-foreground">{entry.value} · {pct}%</span>
                   </li>
                 );
@@ -121,20 +124,20 @@ export default function Metrics() {
             </ul>
           </div>
         </div>
-        <div className="flex flex-col rounded-lg border bg-card p-4">
+        <div className="flex flex-col rounded-lg border bg-card p-3 sm:p-4">
           <h2 className="mb-2 text-sm font-medium">Conformidade por cliente</h2>
           <div className="flex-1 min-h-[280px] max-h-[600px] overflow-y-auto">
             <ResponsiveContainer width="100%" height="100%" minHeight={compliance.length * 44 + 40}>
               <BarChart data={compliance} layout="vertical" margin={{ top: 0, right: 48, left: 8, bottom: 0 }} barCategoryGap={6}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
                 <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" width={Math.min(140, Math.max(40, (compliance.reduce((m, c) => Math.max(m, c.name.length), 0) * 7) + 12))} tick={{ fontSize: 11 }} interval={0} />
+                <YAxis dataKey="name" type="category" width={Math.min(120, Math.max(60, (compliance.reduce((m, c) => Math.max(m, c.name.length), 0) * 6) + 12))} tick={{ fontSize: 11 }} interval={0} />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                   contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }}
                   formatter={(value: number, _name, props) => [`${value}% (${props.payload.okCount}/${props.payload.total} OK)`, props.payload.fullName]}
                 />
-                <Bar dataKey="conformidade" radius={[0, 4, 4, 0]} barSize={24} isAnimationActive={false}>
+                <Bar dataKey="conformidade" radius={[0, 4, 4, 0]} barSize={22} isAnimationActive={false}>
                   {compliance.map((entry, idx) => (
                     <Cell key={idx} fill={entry.conformidade < 40 ? "#f87171" : entry.conformidade < 70 ? "#fbbf24" : "#34d399"} />
                   ))}
@@ -144,16 +147,41 @@ export default function Metrics() {
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="rounded-lg border bg-card p-4 xl:col-span-2"><h2 className="mb-4 text-sm font-medium">Pendências por tipo</h2><div className="h-72"><ResponsiveContainer><BarChart data={byType}><CartesianGrid stroke="hsl(var(--border))" vertical={false} /><XAxis dataKey="name" /><YAxis allowDecimals={false} /><Tooltip />{statusOrder.map((status) => <Bar key={status} dataKey={statusMeta[status].label} stackId="a" fill={chartColor[status]} />)}</BarChart></ResponsiveContainer></div></div>
+        <div className="rounded-lg border bg-card p-3 sm:p-4 xl:col-span-2">
+          <h2 className="mb-3 text-sm font-medium sm:mb-4">Pendências por tipo</h2>
+          <div className="h-72 sm:h-80">
+            <ResponsiveContainer>
+              <BarChart data={byType} margin={{ top: 0, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={byType.length > 6 ? -30 : 0} textAnchor={byType.length > 6 ? "end" : "middle"} height={byType.length > 6 ? 50 : 30} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }} />
+                {statusOrder.map((status) => <Bar key={status} dataKey={statusMeta[status].label} stackId="a" fill={chartColor[status]} />)}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </section>
-      <section className="rounded-lg border bg-card p-4"><h2 className="mb-4 text-sm font-medium">Timeline de validade</h2>{timeline.length ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-6 lg:grid-cols-11">{timeline.map((item) => <div key={item.year} className={`rounded-md border p-3 text-center text-xs ${statusMeta[item.status].className}`}><div className="font-medium">{item.year}</div><div>{statusMeta[item.status].label}</div></div>)}</div> : <p className="text-sm text-muted-foreground">Sem registros com ano informado para gerar a timeline.</p>}</section>
+      <section className="rounded-lg border bg-card p-3 sm:p-4">
+        <h2 className="mb-3 text-sm font-medium sm:mb-4">Timeline de validade</h2>
+        {timeline.length ? (
+          <div className="grid grid-cols-3 gap-2 xs:grid-cols-4 sm:grid-cols-6 lg:grid-cols-11">
+            {timeline.map((item) => (
+              <div key={item.year} className={`rounded-md border p-2 text-center text-xs sm:p-3 ${statusMeta[item.status].className}`}>
+                <div className="font-medium">{item.year}</div>
+                <div className="text-[10px] sm:text-xs">{statusMeta[item.status].label}</div>
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-sm text-muted-foreground">Sem registros com ano informado para gerar a timeline.</p>}
+      </section>
 
-      <section className="rounded-lg border bg-card p-4">
-        <h2 className="mb-4 text-sm font-medium">Carga por Responsável</h2>
+      <section className="rounded-lg border bg-card p-3 sm:p-4">
+        <h2 className="mb-3 text-sm font-medium sm:mb-4">Carga por Responsável</h2>
         {responsibleLoad.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum projeto planejado atribuído ainda.</p>
         ) : (
-          <div style={{ height: Math.max(180, responsibleLoad.length * 44 + 40) }}>
+          <div style={{ height: Math.max(200, responsibleLoad.length * 48 + 40) }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={responsibleLoad} layout="vertical" margin={{ top: 0, right: 32, left: 8, bottom: 0 }} barCategoryGap={8}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
@@ -161,7 +189,7 @@ export default function Metrics() {
                 <YAxis
                   dataKey="name"
                   type="category"
-                  width={Math.min(160, Math.max(60, responsibleLoad.reduce((m, e) => Math.max(m, e.name.length), 0) * 7 + 12))}
+                  width={Math.min(120, Math.max(60, responsibleLoad.reduce((m, e) => Math.max(m, e.name.length), 0) * 6 + 12))}
                   tick={{ fontSize: 11 }}
                   interval={0}
                 />

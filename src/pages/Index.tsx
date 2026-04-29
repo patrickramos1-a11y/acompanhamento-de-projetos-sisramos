@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ClientCard } from "@/components/project/ClientCard";
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
 import { CreateClientDialog } from "@/pages/Configure";
@@ -30,6 +31,7 @@ export default function Index() {
   const [typeFilterOpen, setTypeFilterOpen] = useState(false);
   const [responsibleFilters, setResponsibleFilters] = useState<string[]>([]);
   const [responsibleFilterOpen, setResponsibleFilterOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const types = projectTypes.data ?? [];
   const allRecords = records.data ?? [];
@@ -90,26 +92,227 @@ export default function Index() {
   const warning = rows.filter((row) => row.worst === "warning").length;
   const avg = rows.length ? Math.round(rows.reduce((sum, row) => sum + row.score, 0) / rows.length) : 0;
 
+  const activeFilterCount =
+    (statusFilters.length > 0 ? 1 : 0) +
+    (selectedTypeIds.length > 0 ? 1 : 0) +
+    (responsibleFilters.length > 0 ? 1 : 0) +
+    (sortKey !== "critical" || sortDir !== "desc" ? 1 : 0);
+
+  const clearAllFilters = () => {
+    setStatusFilters([]);
+    setSelectedTypeIds([]);
+    setResponsibleFilters([]);
+    setSortKey("critical");
+    setSortDir("desc");
+  };
+
+  const sortChips: { key: SortKey; label: string }[] = [
+    { key: "critical", label: "Criticidade" },
+    { key: "alpha", label: "Alfabética" },
+    { key: "score", label: "Conformidade" },
+  ];
+
+  const FiltersBody = (
+    <div className="space-y-5">
+      <div className="space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ordenar por</p>
+        <div className="flex flex-wrap gap-2">
+          {sortChips.map((chip) => (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={() => setSortKey(chip.key)}
+              className={cn(
+                "h-9 rounded-full border px-3 text-xs font-medium transition-colors",
+                sortKey === chip.key
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-accent",
+              )}
+            >
+              {chip.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+            className="flex h-9 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent"
+            aria-label="Inverter direção"
+          >
+            {sortDir === "desc" ? <ArrowDown className="h-3.5 w-3.5" /> : <ArrowUp className="h-3.5 w-3.5" />}
+            {sortDir === "desc" ? "Maior" : "Menor"}
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</p>
+          {statusFilters.length > 0 && (
+            <button type="button" onClick={() => setStatusFilters([])} className="text-xs text-muted-foreground hover:text-foreground">
+              limpar
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {filters.map((f) => {
+            const checked = statusFilters.includes(f);
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() =>
+                  setStatusFilters((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]))
+                }
+                className={cn(
+                  "h-9 rounded-full border px-3 text-xs font-medium transition-colors",
+                  checked
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:bg-accent",
+                )}
+              >
+                {statusMeta[f].label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tipos de projeto</p>
+          {selectedTypeIds.length > 0 && (
+            <button type="button" onClick={() => setSelectedTypeIds([])} className="text-xs text-muted-foreground hover:text-foreground">
+              limpar
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {sortedTypes.map((type) => {
+            const checked = selectedTypeIds.includes(type.id);
+            return (
+              <button
+                key={type.id}
+                type="button"
+                onClick={() => toggleType(type.id)}
+                className={cn(
+                  "h-9 rounded-full border px-3 text-xs font-medium transition-colors",
+                  checked
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:bg-accent",
+                )}
+                title={type.name}
+              >
+                {type.abbreviation || type.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {sortedResponsibles.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Responsáveis</p>
+            {responsibleFilters.length > 0 && (
+              <button type="button" onClick={() => setResponsibleFilters([])} className="text-xs text-muted-foreground hover:text-foreground">
+                limpar
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {sortedResponsibles.map((r) => {
+              const checked = responsibleFilters.includes(r.id);
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() =>
+                    setResponsibleFilters((prev) =>
+                      prev.includes(r.id) ? prev.filter((x) => x !== r.id) : [...prev, r.id],
+                    )
+                  }
+                  className={cn(
+                    "h-9 rounded-full border px-3 text-xs font-medium transition-colors",
+                    checked
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:bg-accent",
+                  )}
+                >
+                  {r.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <main className="space-y-5">
       <header className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
-          <h1 className="text-2xl font-semibold tracking-normal">Painel de Projetos</h1>
-          <p className="text-sm text-muted-foreground">Status de validade por cliente e tipo de serviço.</p>
+          <h1 className="text-xl font-semibold tracking-normal sm:text-2xl">Painel de Projetos</h1>
+          <p className="text-xs text-muted-foreground sm:text-sm">Status de validade por cliente e tipo de serviço.</p>
         </div>
-        <CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} />
+        <div className="hidden md:block">
+          <CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} />
+        </div>
       </header>
 
-      <section className="grid gap-3 md:grid-cols-5">
-        {[['Clientes', total], ['Defasados', critical], ['Atrasados', late], ['Em atenção', warning], ['Conformidade média', `${avg}%`]].map(([label, value]) => (
-          <div key={label} className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-semibold">{value}</p>
+      <section className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-5">
+        {[['Clientes', total], ['Defasados', critical], ['Atrasados', late], ['Em atenção', warning], ['Conformidade média', `${avg}%`]].map(([label, value], idx) => (
+          <div
+            key={label as string}
+            className={cn(
+              "rounded-lg border bg-card p-3 sm:p-4",
+              idx === 4 && "col-span-2 md:col-span-1",
+            )}
+          >
+            <p className="text-[11px] text-muted-foreground sm:text-xs">{label}</p>
+            <p className="mt-1.5 text-xl font-semibold sm:mt-2 sm:text-2xl">{value}</p>
           </div>
         ))}
       </section>
 
-      <section className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      {/* Mobile: search + single filter button */}
+      <section className="flex flex-col gap-2 lg:hidden">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="pl-9" placeholder="Buscar cliente" value={search} onChange={(event) => setSearch(event.target.value)} />
+        </div>
+        <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <span className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Filtros
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="ml-1">{activeFilterCount}</Badge>
+                )}
+              </span>
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto rounded-t-xl p-4 safe-pb">
+            <SheetHeader className="mb-4 text-left">
+              <SheetTitle>Filtros e ordenação</SheetTitle>
+            </SheetHeader>
+            {FiltersBody}
+            <div className="sticky bottom-0 mt-5 flex gap-2 border-t border-border bg-background pt-3">
+              <Button variant="outline" className="flex-1" onClick={clearAllFilters} disabled={activeFilterCount === 0}>
+                Limpar tudo
+              </Button>
+              <Button className="flex-1" onClick={() => setMobileFiltersOpen(false)}>
+                Aplicar
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </section>
+
+      {/* Desktop: full filter bar */}
+      <section className="hidden flex-col gap-3 lg:flex lg:flex-row lg:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-9" placeholder="Buscar por cliente, sigla ou responsável" value={search} onChange={(event) => setSearch(event.target.value)} />
@@ -186,12 +389,7 @@ export default function Index() {
               </CommandList>
               {selectedTypeIds.length > 0 && (
                 <div className="border-t p-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-center"
-                    onClick={() => setSelectedTypeIds([])}
-                  >
+                  <Button variant="ghost" size="sm" className="w-full justify-center" onClick={() => setSelectedTypeIds([])}>
                     <X className="h-4 w-4" />
                     Limpar seleção
                   </Button>
@@ -251,12 +449,7 @@ export default function Index() {
               </CommandList>
               {statusFilters.length > 0 && (
                 <div className="border-t p-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-center"
-                    onClick={() => setStatusFilters([])}
-                  >
+                  <Button variant="ghost" size="sm" className="w-full justify-center" onClick={() => setStatusFilters([])}>
                     <X className="h-4 w-4" />
                     Limpar seleção
                   </Button>
@@ -303,9 +496,7 @@ export default function Index() {
                         <div
                           className={cn(
                             "mr-2 flex h-4 w-4 items-center justify-center rounded border",
-                            checked
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-muted-foreground/40",
+                            checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40",
                           )}
                         >
                           {checked && <Check className="h-3 w-3" />}
@@ -318,12 +509,7 @@ export default function Index() {
               </CommandList>
               {responsibleFilters.length > 0 && (
                 <div className="border-t p-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-center"
-                    onClick={() => setResponsibleFilters([])}
-                  >
+                  <Button variant="ghost" size="sm" className="w-full justify-center" onClick={() => setResponsibleFilters([])}>
                     <X className="h-4 w-4" />
                     Limpar seleção
                   </Button>
@@ -353,6 +539,17 @@ export default function Index() {
           ))}
         </section>
       )}
+
+      {/* FAB mobile */}
+      <div className="fixed bottom-20 right-4 z-30 md:hidden safe-bottom">
+        <CreateClientDialog
+          trigger={
+            <Button size="icon" className="h-14 w-14 rounded-full shadow-lg">
+              <Plus className="h-6 w-6" />
+            </Button>
+          }
+        />
+      </div>
     </main>
   );
 }
