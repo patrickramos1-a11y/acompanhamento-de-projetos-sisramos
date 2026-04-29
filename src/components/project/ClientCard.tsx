@@ -138,10 +138,10 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
     <Link
       to={`/clientes/${client.id}`}
       className={cn(
-        "group block rounded-lg border bg-card p-5 transition-colors",
+        "group block rounded-lg border bg-card p-4 transition-colors sm:p-5",
         borderClass,
       )}
-      style={{ display: "flex", flexDirection: "column", gap: 14 }}
+      style={{ display: "flex", flexDirection: "column", gap: 12 }}
     >
       {/* Cabeçalho */}
       <div className="flex flex-col gap-1.5">
