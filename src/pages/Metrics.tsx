@@ -176,12 +176,12 @@ export default function Metrics() {
         ) : <p className="text-sm text-muted-foreground">Sem registros com ano informado para gerar a timeline.</p>}
       </section>
 
-      <section className="rounded-lg border bg-card p-4">
-        <h2 className="mb-4 text-sm font-medium">Carga por Responsável</h2>
+      <section className="rounded-lg border bg-card p-3 sm:p-4">
+        <h2 className="mb-3 text-sm font-medium sm:mb-4">Carga por Responsável</h2>
         {responsibleLoad.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum projeto planejado atribuído ainda.</p>
         ) : (
-          <div style={{ height: Math.max(180, responsibleLoad.length * 44 + 40) }}>
+          <div style={{ height: Math.max(200, responsibleLoad.length * 48 + 40) }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={responsibleLoad} layout="vertical" margin={{ top: 0, right: 32, left: 8, bottom: 0 }} barCategoryGap={8}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
@@ -189,7 +189,7 @@ export default function Metrics() {
                 <YAxis
                   dataKey="name"
                   type="category"
-                  width={Math.min(160, Math.max(60, responsibleLoad.reduce((m, e) => Math.max(m, e.name.length), 0) * 7 + 12))}
+                  width={Math.min(120, Math.max(60, responsibleLoad.reduce((m, e) => Math.max(m, e.name.length), 0) * 6 + 12))}
                   tick={{ fontSize: 11 }}
                   interval={0}
                 />
