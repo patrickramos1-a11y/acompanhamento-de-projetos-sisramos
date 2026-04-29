@@ -189,43 +189,50 @@ function ResponsibleRow({ responsible, assignedCount }: { responsible: Responsib
     color.toLowerCase() !== initialColor.toLowerCase();
 
   return (
-    <div className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-[auto_1fr_auto_auto_auto] md:items-center">
-      <div className="flex items-center gap-2">
-        <ResponsibleAvatar name={name || responsible.name} color={color} size={28} withTooltip={false} />
-        <label className="relative inline-flex h-7 w-7 cursor-pointer items-center justify-center overflow-hidden rounded-md border border-border bg-background" title="Escolher cor">
-          <span className="h-4 w-4 rounded-sm" style={{ backgroundColor: color }} />
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="absolute inset-0 cursor-pointer opacity-0"
-          />
-        </label>
+    <div className="rounded-lg border bg-card p-3 space-y-2 md:grid md:grid-cols-[auto_1fr_auto_auto_auto] md:items-center md:gap-2 md:space-y-0">
+      <div className="flex items-center justify-between gap-2 md:contents">
+        <div className="flex items-center gap-2">
+          <ResponsibleAvatar name={name || responsible.name} color={color} size={32} withTooltip={false} />
+          <label className="relative inline-flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-md border border-border bg-background" title="Escolher cor">
+            <span className="h-5 w-5 rounded-sm" style={{ backgroundColor: color }} />
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </label>
+        </div>
+        <span className="text-xs text-muted-foreground whitespace-nowrap md:hidden">
+          {assignedCount} {assignedCount === 1 ? "proj." : "projs."}
+        </span>
       </div>
       <Input value={name} onChange={(e) => setName(e.target.value)} />
-      <span className="px-2 text-xs text-muted-foreground whitespace-nowrap">
+      <span className="hidden px-2 text-xs text-muted-foreground whitespace-nowrap md:inline">
         {assignedCount} {assignedCount === 1 ? "projeto" : "projetos"}
       </span>
-      <Button size="icon" variant="outline" disabled={!dirty} onClick={() => update.mutate({ id: responsible.id, values: { name: name.trim(), color } as any })} title="Salvar alterações">
-        <Save className="h-4 w-4" />
-      </Button>
-      <AlertDialog>
-        <AlertDialogTrigger asChild><Button size="icon" variant="destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir {responsible.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {assignedCount > 0
-                ? `Este responsável está atribuído a ${assignedCount} ${assignedCount === 1 ? "projeto" : "projetos"}. Removê-lo deixará esses projetos sem responsável.`
-                : "Esta ação não pode ser desfeita."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => remove.mutate(responsible.id)}>Excluir</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <div className="flex justify-end gap-2 md:contents">
+        <Button size="icon" variant="outline" disabled={!dirty} onClick={() => update.mutate({ id: responsible.id, values: { name: name.trim(), color } as any })} title="Salvar alterações">
+          <Save className="h-4 w-4" />
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild><Button size="icon" variant="destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+          <AlertDialogContent className="max-w-[calc(100vw-2rem)]">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir {responsible.name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {assignedCount > 0
+                  ? `Este responsável está atribuído a ${assignedCount} ${assignedCount === 1 ? "projeto" : "projetos"}. Removê-lo deixará esses projetos sem responsável.`
+                  : "Esta ação não pode ser desfeita."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={() => remove.mutate(responsible.id)}>Excluir</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
