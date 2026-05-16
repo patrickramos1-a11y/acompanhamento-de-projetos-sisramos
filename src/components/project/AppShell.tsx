@@ -17,11 +17,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[240px_1fr]">
       {/* Top bar (mobile only) */}
-      <header className="sticky top-0 z-40 flex h-12 items-center gap-3 border-b border-border bg-sidebar px-4 lg:hidden">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
+      <header className="sticky top-0 z-40 flex h-12 items-center gap-3 border-b border-border bg-card/90 px-4 backdrop-blur lg:hidden">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
           PC
         </div>
-        <p className="truncate text-sm font-semibold text-sidebar-foreground">{currentLabel}</p>
+        <p className="truncate text-sm font-semibold text-foreground">{currentLabel}</p>
       </header>
 
       {/* Sidebar (desktop only) */}
@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Bottom navigation (mobile only) */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-border bg-sidebar safe-pb lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-border bg-card shadow-card safe-pb lg:hidden"
         aria-label="Navegação principal"
       >
         {nav.map((item) => (
@@ -72,8 +72,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             end={item.to === "/"}
             className={({ isActive }) =>
               cn(
-                "flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground transition-colors active:bg-sidebar-accent",
-                isActive && "text-sidebar-primary",
+                "flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground transition-colors active:bg-accent",
+                isActive && "text-primary",
               )
             }
           >

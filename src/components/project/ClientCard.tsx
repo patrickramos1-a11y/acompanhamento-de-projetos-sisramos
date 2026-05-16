@@ -38,22 +38,22 @@ function scoreBar(score: number) {
 function chipClass(status: StatusKey) {
   switch (status) {
     case "overdue":
-      return "bg-[#2b0d0d] border-2 border-[#4a1a1a] text-[#f5a3a3]";
+      return "bg-status-overdue/10 border-2 border-status-overdue/40 text-status-overdue";
     case "late":
-      return "bg-status-late/10 border-2 border-status-late/35 text-status-late";
+      return "bg-status-late/10 border-2 border-status-late/40 text-status-late";
     case "warning":
-      return "bg-[#2b1f0d] border border-[#4a3515] text-[#f5d27a]";
+      return "bg-status-warning/12 border border-status-warning/40 text-status-warning";
     case "ok":
-      return "bg-[#0d2b1f] border border-[#1a4a35] text-[#86e2b8]";
+      return "bg-status-ok/10 border border-status-ok/35 text-status-ok";
     case "requested":
-      return "bg-[#0d1a2b] border border-[#1a3050] text-[#8cc4f5]";
+      return "bg-status-requested/10 border border-status-requested/35 text-status-requested";
     case "planned":
       return "bg-status-planned/10 border border-status-planned/35 text-status-planned";
     case "na":
-      return "bg-transparent border border-[#1f1f2a] text-muted-foreground/40 opacity-70";
+      return "bg-transparent border border-dashed border-status-na/40 text-muted-foreground opacity-70";
     case "missing":
     default:
-      return "bg-[#1e1e2a] border border-[#3a3a4a] text-muted-foreground";
+      return "bg-muted border border-border text-muted-foreground";
   }
 }
 
@@ -138,7 +138,7 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
     <Link
       to={`/clientes/${client.id}`}
       className={cn(
-        "group block rounded-lg border bg-card p-4 transition-colors sm:p-5",
+        "card-base group block p-4 sm:p-5",
         borderClass,
       )}
       style={{ display: "flex", flexDirection: "column", gap: 12 }}
@@ -242,19 +242,19 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
 
       {/* Rodapé condicional */}
       {(hasOverdue || hasLate || hasWarning) && (
-        <div className="flex flex-col gap-1 border-t border-border/20 pt-2.5">
+        <div className="flex flex-col gap-1 border-t border-border/60 pt-2.5">
           {hasOverdue && (
-            <p className="text-[11px] font-normal text-[#c45c5c]">
+            <p className="text-[11px] font-normal text-status-overdue/90">
               Renovação urgente: {overdueAbbrs.join(", ")}
             </p>
           )}
           {hasLate && (
-            <p className="text-[11px] font-normal text-[#c47a4a]">
+            <p className="text-[11px] font-normal text-status-late/90">
               Atrasado: {lateAbbrs.join(", ")}
             </p>
           )}
           {hasWarning && (
-            <p className="text-[11px] font-normal text-[#c4a85c]">
+            <p className="text-[11px] font-normal text-status-warning/90">
               Vence este ano: {warningAbbrs.join(", ")}
             </p>
           )}
