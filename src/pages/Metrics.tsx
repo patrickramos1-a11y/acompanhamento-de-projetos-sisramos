@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePlatformData } from "@/hooks/useProjectData";
 import { computeStatus, statusMeta, statusOrder } from "@/lib/status";
 import { statusForClient } from "@/lib/project-view";
@@ -17,6 +18,7 @@ const chartColor: Record<string, string> = {
 
 export default function Metrics() {
   const { clients, projectTypes, records, settings, responsibles, isLoading } = usePlatformData();
+  const isMobile = useIsMobile();
   if (isLoading) return <PageSkeleton />;
   const config = settings.data;
   if (!config) return <EmptyState title="Não foi possível carregar as métricas." />;
@@ -99,17 +101,17 @@ export default function Metrics() {
         <div className="rounded-lg border bg-card p-3 sm:p-4">
           <h2 className="mb-3 text-sm font-medium sm:mb-4">Distribuição global</h2>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="h-[240px] w-full sm:flex-1">
+            <div className="mx-auto w-full max-w-[260px] aspect-square sm:flex-1 sm:max-w-none sm:aspect-auto sm:h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={distribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={52} outerRadius={84}>
+                  <Pie data={distribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="42%" outerRadius="72%">
                     {distribution.map((entry) => <Cell key={entry.status} fill={chartColor[entry.status]} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <ul className="grid grid-cols-2 gap-2 sm:flex sm:w-44 sm:flex-col">
+            <ul className="grid grid-cols-1 gap-2 xs:grid-cols-2 sm:flex sm:w-44 sm:flex-col">
               {distribution.map((entry) => {
                 const total = distribution.reduce((sum, item) => sum + item.value, 0);
                 const pct = total ? Math.round((entry.value / total) * 100) : 0;
@@ -117,7 +119,7 @@ export default function Metrics() {
                   <li key={entry.status} className="flex items-center gap-2 text-xs">
                     <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: chartColor[entry.status] }} />
                     <span className="flex-1 truncate text-foreground">{entry.name}</span>
-                    <span className="text-muted-foreground">{entry.value} · {pct}%</span>
+                    <span className="shrink-0 text-muted-foreground">{entry.value} · {pct}%</span>
                   </li>
                 );
               })}
@@ -128,16 +130,16 @@ export default function Metrics() {
           <h2 className="mb-2 text-sm font-medium">Conformidade por cliente</h2>
           <div className="flex-1 min-h-[280px] max-h-[600px] overflow-y-auto">
             <ResponsiveContainer width="100%" height="100%" minHeight={compliance.length * 44 + 40}>
-              <BarChart data={compliance} layout="vertical" margin={{ top: 0, right: 48, left: 8, bottom: 0 }} barCategoryGap={6}>
+              <BarChart data={compliance} layout="vertical" margin={{ top: 0, right: 56, left: 8, bottom: 0 }} barCategoryGap={6}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} vertical />
-                <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" width={Math.min(120, Math.max(60, (compliance.reduce((m, c) => Math.max(m, c.name.length), 0) * 6) + 12))} tick={{ fontSize: 11 }} interval={0} />
+                <XAxis type="number" domain={[0, 100]} ticks={isMobile ? [0, 50, 100] : [0, 25, 50, 75, 100]} tick={{ fontSize: 11 }} />
+                <YAxis dataKey="name" type="category" width={isMobile ? Math.min(80, Math.max(56, (compliance.reduce((m, c) => Math.max(m, c.name.length), 0) * 6) + 12)) : Math.min(120, Math.max(60, (compliance.reduce((m, c) => Math.max(m, c.name.length), 0) * 6) + 12))} tick={{ fontSize: 11 }} interval={0} />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
                   contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }}
                   formatter={(value: number, _name, props) => [`${value}% (${props.payload.okCount}/${props.payload.total} OK)`, props.payload.fullName]}
                 />
-                <Bar dataKey="conformidade" radius={[0, 4, 4, 0]} barSize={22} isAnimationActive={false}>
+                <Bar dataKey="conformidade" radius={[0, 4, 4, 0]} barSize={isMobile ? 18 : 22} isAnimationActive={false}>
                   {compliance.map((entry, idx) => (
                     <Cell key={idx} fill={entry.conformidade < 40 ? "#f87171" : entry.conformidade < 70 ? "#fbbf24" : "#34d399"} />
                   ))}
@@ -149,11 +151,11 @@ export default function Metrics() {
         </div>
         <div className="rounded-lg border bg-card p-3 sm:p-4 xl:col-span-2">
           <h2 className="mb-3 text-sm font-medium sm:mb-4">Pendências por tipo</h2>
-          <div className="h-72 sm:h-80">
+          <div className="h-80 sm:h-80">
             <ResponsiveContainer>
               <BarChart data={byType} margin={{ top: 0, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={byType.length > 6 ? -30 : 0} textAnchor={byType.length > 6 ? "end" : "middle"} height={byType.length > 6 ? 50 : 30} />
+                <XAxis dataKey="name" tick={{ fontSize: isMobile ? 10 : 11 }} interval={0} angle={isMobile || byType.length > 6 ? -30 : 0} textAnchor={isMobile || byType.length > 6 ? "end" : "middle"} height={isMobile || byType.length > 6 ? 56 : 30} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 12 }} />
                 {statusOrder.map((status) => <Bar key={status} dataKey={statusMeta[status].label} stackId="a" fill={chartColor[status]} />)}
