@@ -58,13 +58,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main */}
-      <div className="min-w-0 px-4 pb-24 pt-4 sm:px-6 lg:px-8 lg:py-6 lg:pb-8">{children}</div>
+      <div className="min-w-0 px-4 pb-safe-nav pt-4 sm:px-6 lg:px-8 lg:py-6 lg:pb-8">{children}</div>
 
       {/* Bottom navigation (mobile only) */}
-      <nav
-        className="fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-border bg-card shadow-card safe-pb lg:hidden"
-        aria-label="Navegação principal"
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card shadow-card lg:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
+        <nav className="flex h-14" aria-label="Navegação principal">
         {nav.map((item) => (
           <NavLink
             key={item.to}
@@ -81,7 +82,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>{item.label}</span>
           </NavLink>
         ))}
-      </nav>
+        </nav>
+      </div>
     </div>
   );
 }

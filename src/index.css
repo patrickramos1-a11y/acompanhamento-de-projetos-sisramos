@@ -149,6 +149,9 @@
   .safe-pb {
     padding-bottom: max(env(safe-area-inset-bottom), 0px);
   }
+  .pb-safe-nav {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom) + 1rem);
+  }
   .safe-bottom {
     bottom: env(safe-area-inset-bottom, 0px);
   }
