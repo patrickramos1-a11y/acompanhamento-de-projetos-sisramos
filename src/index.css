@@ -4,72 +4,64 @@
 
 @layer base {
   :root {
-    --background: 240 20% 5%;
-    --foreground: 210 28% 94%;
-    --card: 240 17% 8%;
-    --card-foreground: 210 28% 94%;
-    --popover: 240 17% 8%;
-    --popover-foreground: 210 28% 94%;
-    --primary: 174 65% 45%;
-    --primary-foreground: 190 35% 7%;
-    --secondary: 230 13% 15%;
-    --secondary-foreground: 210 28% 94%;
-    --muted: 230 12% 14%;
-    --muted-foreground: 218 11% 64%;
-    --accent: 229 13% 16%;
-    --accent-foreground: 210 28% 94%;
-    --destructive: 2 73% 56%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 229 12% 18%;
-    --input: 229 12% 18%;
-    --ring: 174 65% 45%;
-    --radius: 0.5rem;
-    --sidebar-background: 240 18% 6%;
-    --sidebar-foreground: 215 18% 82%;
-    --sidebar-primary: 174 65% 45%;
-    --sidebar-primary-foreground: 190 35% 7%;
-    --sidebar-accent: 230 13% 13%;
-    --sidebar-accent-foreground: 210 28% 94%;
-    --sidebar-border: 229 12% 17%;
-    --sidebar-ring: 174 65% 45%;
-    --status-ok: 154 58% 45%;
-    --status-warning: 43 84% 56%;
-    --status-overdue: 2 73% 56%;
-    --status-missing: 220 9% 58%;
-    --status-requested: 205 82% 56%;
-    --status-planned: 250 70% 65%;
-    --status-late: 25 92% 56%;
-    --status-na: 220 8% 38%;
-  }
+    /* SISRAMOS Light Theme */
+    --bg-page: 120 25% 98%;
+    --background: 0 0% 100%;
+    --foreground: 122 30% 15%;
 
-  .dark {
-    --background: 240 20% 5%;
-    --foreground: 210 28% 94%;
-    --card: 240 17% 8%;
-    --card-foreground: 210 28% 94%;
-    --popover: 240 17% 8%;
-    --popover-foreground: 210 28% 94%;
-    --primary: 174 65% 45%;
-    --primary-foreground: 190 35% 7%;
-    --secondary: 230 13% 15%;
-    --secondary-foreground: 210 28% 94%;
-    --muted: 230 12% 14%;
-    --muted-foreground: 218 11% 64%;
-    --accent: 229 13% 16%;
-    --accent-foreground: 210 28% 94%;
-    --destructive: 2 73% 56%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 229 12% 18%;
-    --input: 229 12% 18%;
-    --ring: 174 65% 45%;
-    --sidebar-background: 240 18% 6%;
-    --sidebar-foreground: 215 18% 82%;
-    --sidebar-primary: 174 65% 45%;
-    --sidebar-primary-foreground: 190 35% 7%;
-    --sidebar-accent: 230 13% 13%;
-    --sidebar-accent-foreground: 210 28% 94%;
-    --sidebar-border: 229 12% 17%;
-    --sidebar-ring: 174 65% 45%;
+    --card: 0 0% 100%;
+    --card-foreground: 122 30% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 122 30% 15%;
+
+    --primary: 122 38% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 122 20% 94%;
+    --secondary-foreground: 122 38% 30%;
+    --muted: 122 15% 94%;
+    --muted-foreground: 122 12% 42%;
+    --accent: 122 30% 92%;
+    --accent-foreground: 122 38% 22%;
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 122 18% 88%;
+    --input: 122 18% 88%;
+    --ring: 122 38% 40%;
+    --radius: 0.75rem;
+
+    /* Sidebar — deep institutional green */
+    --sidebar-background: 122 32% 18%;
+    --sidebar-foreground: 122 10% 95%;
+    --sidebar-primary: 122 50% 55%;
+    --sidebar-primary-foreground: 122 30% 10%;
+    --sidebar-accent: 122 25% 26%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 122 22% 24%;
+    --sidebar-ring: 122 50% 55%;
+
+    /* Status tokens (project semantics) — tuned for light bg */
+    --status-ok: 122 45% 38%;
+    --status-warning: 38 92% 45%;
+    --status-overdue: 0 75% 50%;
+    --status-missing: 220 9% 50%;
+    --status-requested: 210 80% 48%;
+    --status-planned: 250 60% 56%;
+    --status-late: 22 90% 48%;
+    --status-na: 220 8% 60%;
+
+    /* Shadows tinted with primary green */
+    --shadow-sm: 0 1px 2px 0 hsl(122 40% 20% / 0.04);
+    --shadow-card: 0 1px 2px hsl(122 40% 20% / 0.04), 0 8px 24px -12px hsl(122 41% 33% / 0.18);
+    --shadow-card-hover: 0 2px 4px hsl(122 40% 20% / 0.05), 0 16px 40px -16px hsl(122 41% 33% / 0.28);
+    --shadow-elevated: 0 24px 60px -24px hsl(122 40% 20% / 0.18), 0 8px 20px -8px hsl(122 41% 33% / 0.15);
+
+    /* Chart slots (used across Metrics) */
+    --chart-1: 122 45% 42%;
+    --chart-2: 210 80% 50%;
+    --chart-3: 30 90% 50%;
+    --chart-4: 280 60% 55%;
+    --chart-5: 0 70% 55%;
+    --chart-6: 180 65% 40%;
   }
 }
 
@@ -84,21 +76,72 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
+    background-color: hsl(var(--bg-page));
+    background-image:
+      radial-gradient(ellipse 60% 50% at 0% 0%, hsl(var(--primary) / 0.08), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, hsl(var(--primary) / 0.06), transparent 60%),
+      radial-gradient(ellipse 40% 30% at 100% 0%, hsl(var(--accent-foreground) / 0.04), transparent 60%);
+    background-attachment: fixed;
+    color-scheme: light;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    color-scheme: dark;
     -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, button, input, textarea, select {
-    letter-spacing: 0;
-  }
-
-  /* Avoid iOS zoom on focus */
+  /* Anti-zoom on iOS */
   @media (max-width: 767px) {
     input, select, textarea {
       font-size: 16px;
     }
+  }
+
+  /* Inputs focus ring (subtle green halo) */
+  input:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+  }
+
+  /* Table row hover with left accent */
+  tbody tr {
+    transition: background-color 0.15s ease, box-shadow 0.2s ease;
+  }
+  tbody tr:hover {
+    background-color: hsl(var(--primary) / 0.04);
+    box-shadow: inset 3px 0 0 hsl(var(--primary) / 0.45);
+  }
+}
+
+@layer components {
+  .card-base {
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    border: 1px solid hsl(var(--primary) / 0.08);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s ease;
+  }
+  .card-base:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: hsl(var(--primary) / 0.22);
+  }
+
+  .section-header {
+    position: relative;
+    padding-left: 14px;
+  }
+  .section-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    border-radius: 9999px;
+    background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--primary) / 0.4));
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.5);
   }
 }
 
@@ -115,5 +158,17 @@
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  .text-gradient-primary {
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(122 50% 55%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
