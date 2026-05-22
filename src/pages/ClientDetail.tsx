@@ -47,7 +47,7 @@ export default function ClientDetail() {
       {/* Mobile: card list */}
       <section className="space-y-2 md:hidden">
         {rows.map(({ type, record, status }) => {
-          const until = record ? validUntil(record.year, config) : null;
+          const until = record ? ((record as any).no_expiration ? "Não vence" : validUntil(record.year, config)) : null;
           const rid = record ? ((record as any).responsible_id as string | null) : null;
           const r = rid ? responsibleMap.get(rid) : undefined;
           return (
