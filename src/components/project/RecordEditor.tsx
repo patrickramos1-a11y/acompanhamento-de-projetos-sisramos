@@ -57,6 +57,7 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
       setYear(record.year?.toString() ?? "");
       setRequested(record.requested);
       setNotApplicable(Boolean((record as any).not_applicable));
+      setNoExpiration(Boolean((record as any).no_expiration));
       setPlanned(Boolean((record as any).planned));
       const p = parsePlanned((record as any).planned_for ?? null);
       setPlannedMonth(p.month);
@@ -71,18 +72,28 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
     if (value) {
       setRequested(false);
       setPlanned(false);
+      setNoExpiration(false);
       setYear("");
     }
   };
 
-  const handleRequested = (value: boolean) => {
+  const handleNoExpiration = (value: boolean) => {
     if (notApplicable) return;
+    setNoExpiration(value);
+    if (value) {
+      setRequested(false);
+      setPlanned(false);
+    }
+  };
+
+  const handleRequested = (value: boolean) => {
+    if (notApplicable || noExpiration) return;
     setRequested(value);
     if (value) setPlanned(false);
   };
 
   const handlePlanned = (value: boolean) => {
-    if (notApplicable) return;
+    if (notApplicable || noExpiration) return;
     setPlanned(value);
     if (value) setRequested(false);
   };
