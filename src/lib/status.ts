@@ -149,6 +149,7 @@ export function formatPlannedFor(value: string | null | undefined): string {
 
 export function statusDistance(record: StatusRecord, settings: StatusSettings, currentYear = new Date().getFullYear()) {
   if (record.not_applicable) return "Não aplicável";
+  if (record.no_expiration && record.year) return `Concluído em ${record.year} · Não vence`;
   if (record.planned && record.planned_for) {
     const date = parsePlannedFor(record.planned_for);
     if (date) {
