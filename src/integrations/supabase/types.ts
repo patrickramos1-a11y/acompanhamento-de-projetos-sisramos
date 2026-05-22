@@ -46,6 +46,7 @@ export type Database = {
           client_id: string
           created_at: string
           id: string
+          no_expiration: boolean
           not_applicable: boolean
           notes: string | null
           planned: boolean
@@ -60,6 +61,7 @@ export type Database = {
           client_id: string
           created_at?: string
           id?: string
+          no_expiration?: boolean
           not_applicable?: boolean
           notes?: string | null
           planned?: boolean
@@ -74,6 +76,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           id?: string
+          no_expiration?: boolean
           not_applicable?: boolean
           notes?: string | null
           planned?: boolean

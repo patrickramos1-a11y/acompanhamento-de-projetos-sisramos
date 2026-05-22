@@ -1,0 +1,1 @@
+ALTER TABLE public.project_records ADD COLUMN no_expiration boolean NOT NULL DEFAULT false;
