@@ -230,7 +230,7 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="font-medium">{type.name}</p>
-                  <p>{meta.label}{until ? ` · válido até ${until}` : ""}</p>
+                  <p>{meta.label}{(record as any).no_expiration ? " · não vence" : until ? ` · válido até ${until}` : ""}</p>
                   <p>{statusDistance(record, settings)}</p>
                   {responsible ? <p className="text-muted-foreground">Responsável: {responsible.name}</p> : null}
                 </TooltipContent>
