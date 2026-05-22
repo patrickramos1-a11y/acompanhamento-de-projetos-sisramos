@@ -173,7 +173,20 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
         <Switch checked={notApplicable} onCheckedChange={handleNotApplicable} />
       </div>
 
-      <div className={cn("space-y-4", notApplicable && "opacity-50 pointer-events-none")}>
+      {/* Não vence */}
+      <div className={cn(
+        "flex items-start justify-between gap-3 rounded-md border p-3",
+        notApplicable && "opacity-50 pointer-events-none",
+        noExpiration ? "border-status-ok/40 bg-status-ok/5" : "border-border",
+      )}>
+        <div className="flex-1">
+          <Label className="text-sm font-medium">Não vence</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">Projeto sem prazo de validade — uma vez concluído, fica em dia</p>
+        </div>
+        <Switch checked={noExpiration} onCheckedChange={handleNoExpiration} disabled={notApplicable} />
+      </div>
+
+      <div className={cn("space-y-4", (notApplicable) && "opacity-50 pointer-events-none")}>
         <div className="space-y-2">
           <Label>Ano concluído</Label>
           <Input
@@ -185,10 +198,11 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
           />
         </div>
 
-        <div className="flex items-center justify-between rounded-md border border-border p-3">
+        <div className={cn("flex items-center justify-between rounded-md border border-border p-3", noExpiration && "opacity-50 pointer-events-none")}>
           <Label>Solicitado</Label>
-          <Switch checked={requested} onCheckedChange={handleRequested} disabled={notApplicable} />
+          <Switch checked={requested} onCheckedChange={handleRequested} disabled={notApplicable || noExpiration} />
         </div>
+
 
         <div className={cn(
           "rounded-md border p-3 space-y-3",
