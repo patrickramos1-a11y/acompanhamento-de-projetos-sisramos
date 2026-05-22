@@ -138,16 +138,17 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
       return;
     }
     const plannedFor = planned && plannedMonth && plannedYear ? `${plannedYear}-${plannedMonth}-01` : null;
-    const finalResponsible = !notApplicable && planned && responsibleId !== "none" ? responsibleId : null;
+    const finalResponsible = !notApplicable && !noExpiration && planned && responsibleId !== "none" ? responsibleId : null;
     await updateRecord.mutateAsync({
       id: record.id,
       values: {
         year: notApplicable ? null : year.trim() ? Number(year) : null,
-        requested: notApplicable ? false : requested,
+        requested: notApplicable || noExpiration ? false : requested,
         notes: notes.trim() || null,
         not_applicable: notApplicable,
-        planned: notApplicable ? false : planned,
-        planned_for: notApplicable ? null : plannedFor,
+        no_expiration: notApplicable ? false : noExpiration,
+        planned: notApplicable || noExpiration ? false : planned,
+        planned_for: notApplicable || noExpiration ? null : plannedFor,
         responsible_id: finalResponsible,
       } as any,
     });
