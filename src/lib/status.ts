@@ -14,6 +14,7 @@ export type StatusRecord = {
   not_applicable?: boolean | null;
   planned?: boolean | null;
   planned_for?: string | null; // ISO date string YYYY-MM-DD
+  no_expiration?: boolean | null;
 };
 
 export type StatusSettings = {
