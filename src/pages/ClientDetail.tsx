@@ -123,7 +123,7 @@ export default function ClientDetail() {
                 <TableCell><div className="font-medium">{type.name}</div><div className="text-xs text-muted-foreground">{type.abbreviation}</div></TableCell>
                 <TableCell><StatusBadge status={status} /></TableCell>
                 <TableCell>{record.year ?? "—"}</TableCell>
-                <TableCell>{validUntil(record.year, config) ?? "—"}</TableCell>
+                <TableCell>{(record as any).no_expiration ? <span className="text-status-ok">Não vence</span> : (validUntil(record.year, config) ?? "—")}</TableCell>
                 <TableCell className="text-muted-foreground">{statusDistance(record, config)}</TableCell>
                 {hasAnyResponsible ? (
                   <TableCell>
