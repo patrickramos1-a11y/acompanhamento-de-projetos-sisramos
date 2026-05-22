@@ -206,11 +206,12 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
 
         <div className={cn(
           "rounded-md border p-3 space-y-3",
+          noExpiration && "opacity-50 pointer-events-none",
           planned ? "border-status-planned/40 bg-status-planned/5" : "border-border",
         )}>
           <div className="flex items-center justify-between">
             <Label>Planejado</Label>
-            <Switch checked={planned} onCheckedChange={handlePlanned} disabled={notApplicable} />
+            <Switch checked={planned} onCheckedChange={handlePlanned} disabled={notApplicable || noExpiration} />
           </div>
           {planned && (
             <div className="space-y-3">
