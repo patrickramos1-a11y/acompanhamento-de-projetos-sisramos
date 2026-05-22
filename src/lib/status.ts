@@ -97,6 +97,11 @@ function parsePlannedFor(value: string | null | undefined): Date | null {
 export function computeStatus(record: StatusRecord, settings: StatusSettings, currentYear = new Date().getFullYear()): StatusKey {
   if (record.not_applicable) return "na";
 
+  if (record.no_expiration) {
+    if (record.year) return "ok";
+    // sem ano informado, ainda falta concluir
+  }
+
   if (record.year) {
     const validUntilYear = record.year + settings.validity_years;
     if (validUntilYear <= currentYear) return "overdue";
