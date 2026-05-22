@@ -47,7 +47,7 @@ export default function ClientDetail() {
       {/* Mobile: card list */}
       <section className="space-y-2 md:hidden">
         {rows.map(({ type, record, status }) => {
-          const until = record ? validUntil(record.year, config) : null;
+          const until = record ? ((record as any).no_expiration ? "Não vence" : validUntil(record.year, config)) : null;
           const rid = record ? ((record as any).responsible_id as string | null) : null;
           const r = rid ? responsibleMap.get(rid) : undefined;
           return (
@@ -123,7 +123,7 @@ export default function ClientDetail() {
                 <TableCell><div className="font-medium">{type.name}</div><div className="text-xs text-muted-foreground">{type.abbreviation}</div></TableCell>
                 <TableCell><StatusBadge status={status} /></TableCell>
                 <TableCell>{record.year ?? "—"}</TableCell>
-                <TableCell>{validUntil(record.year, config) ?? "—"}</TableCell>
+                <TableCell>{(record as any).no_expiration ? <span className="text-status-ok">Não vence</span> : (validUntil(record.year, config) ?? "—")}</TableCell>
                 <TableCell className="text-muted-foreground">{statusDistance(record, config)}</TableCell>
                 {hasAnyResponsible ? (
                   <TableCell>

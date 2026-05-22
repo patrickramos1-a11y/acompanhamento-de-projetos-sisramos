@@ -40,6 +40,7 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
   const [year, setYear] = useState(record.year?.toString() ?? "");
   const [requested, setRequested] = useState(record.requested);
   const [notApplicable, setNotApplicable] = useState<boolean>(Boolean((record as any).not_applicable));
+  const [noExpiration, setNoExpiration] = useState<boolean>(Boolean((record as any).no_expiration));
   const [planned, setPlanned] = useState<boolean>(Boolean((record as any).planned));
   const initialPlanned = parsePlanned((record as any).planned_for ?? null);
   const [plannedMonth, setPlannedMonth] = useState(initialPlanned.month);
@@ -56,6 +57,7 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
       setYear(record.year?.toString() ?? "");
       setRequested(record.requested);
       setNotApplicable(Boolean((record as any).not_applicable));
+      setNoExpiration(Boolean((record as any).no_expiration));
       setPlanned(Boolean((record as any).planned));
       const p = parsePlanned((record as any).planned_for ?? null);
       setPlannedMonth(p.month);
@@ -70,18 +72,28 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
     if (value) {
       setRequested(false);
       setPlanned(false);
+      setNoExpiration(false);
       setYear("");
     }
   };
 
-  const handleRequested = (value: boolean) => {
+  const handleNoExpiration = (value: boolean) => {
     if (notApplicable) return;
+    setNoExpiration(value);
+    if (value) {
+      setRequested(false);
+      setPlanned(false);
+    }
+  };
+
+  const handleRequested = (value: boolean) => {
+    if (notApplicable || noExpiration) return;
     setRequested(value);
     if (value) setPlanned(false);
   };
 
   const handlePlanned = (value: boolean) => {
-    if (notApplicable) return;
+    if (notApplicable || noExpiration) return;
     setPlanned(value);
     if (value) setRequested(false);
   };
@@ -126,16 +138,17 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
       return;
     }
     const plannedFor = planned && plannedMonth && plannedYear ? `${plannedYear}-${plannedMonth}-01` : null;
-    const finalResponsible = !notApplicable && planned && responsibleId !== "none" ? responsibleId : null;
+    const finalResponsible = !notApplicable && !noExpiration && planned && responsibleId !== "none" ? responsibleId : null;
     await updateRecord.mutateAsync({
       id: record.id,
       values: {
         year: notApplicable ? null : year.trim() ? Number(year) : null,
-        requested: notApplicable ? false : requested,
+        requested: notApplicable || noExpiration ? false : requested,
         notes: notes.trim() || null,
         not_applicable: notApplicable,
-        planned: notApplicable ? false : planned,
-        planned_for: notApplicable ? null : plannedFor,
+        no_expiration: notApplicable ? false : noExpiration,
+        planned: notApplicable || noExpiration ? false : planned,
+        planned_for: notApplicable || noExpiration ? null : plannedFor,
         responsible_id: finalResponsible,
       } as any,
     });
@@ -160,7 +173,20 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
         <Switch checked={notApplicable} onCheckedChange={handleNotApplicable} />
       </div>
 
-      <div className={cn("space-y-4", notApplicable && "opacity-50 pointer-events-none")}>
+      {/* Não vence */}
+      <div className={cn(
+        "flex items-start justify-between gap-3 rounded-md border p-3",
+        notApplicable && "opacity-50 pointer-events-none",
+        noExpiration ? "border-status-ok/40 bg-status-ok/5" : "border-border",
+      )}>
+        <div className="flex-1">
+          <Label className="text-sm font-medium">Não vence</Label>
+          <p className="mt-0.5 text-xs text-muted-foreground">Projeto sem prazo de validade — uma vez concluído, fica em dia</p>
+        </div>
+        <Switch checked={noExpiration} onCheckedChange={handleNoExpiration} disabled={notApplicable} />
+      </div>
+
+      <div className={cn("space-y-4", (notApplicable) && "opacity-50 pointer-events-none")}>
         <div className="space-y-2">
           <Label>Ano concluído</Label>
           <Input
@@ -172,18 +198,20 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
           />
         </div>
 
-        <div className="flex items-center justify-between rounded-md border border-border p-3">
+        <div className={cn("flex items-center justify-between rounded-md border border-border p-3", noExpiration && "opacity-50 pointer-events-none")}>
           <Label>Solicitado</Label>
-          <Switch checked={requested} onCheckedChange={handleRequested} disabled={notApplicable} />
+          <Switch checked={requested} onCheckedChange={handleRequested} disabled={notApplicable || noExpiration} />
         </div>
+
 
         <div className={cn(
           "rounded-md border p-3 space-y-3",
+          noExpiration && "opacity-50 pointer-events-none",
           planned ? "border-status-planned/40 bg-status-planned/5" : "border-border",
         )}>
           <div className="flex items-center justify-between">
             <Label>Planejado</Label>
-            <Switch checked={planned} onCheckedChange={handlePlanned} disabled={notApplicable} />
+            <Switch checked={planned} onCheckedChange={handlePlanned} disabled={notApplicable || noExpiration} />
           </div>
           {planned && (
             <div className="space-y-3">

@@ -14,6 +14,7 @@ export type StatusRecord = {
   not_applicable?: boolean | null;
   planned?: boolean | null;
   planned_for?: string | null; // ISO date string YYYY-MM-DD
+  no_expiration?: boolean | null;
 };
 
 export type StatusSettings = {
@@ -96,6 +97,11 @@ function parsePlannedFor(value: string | null | undefined): Date | null {
 export function computeStatus(record: StatusRecord, settings: StatusSettings, currentYear = new Date().getFullYear()): StatusKey {
   if (record.not_applicable) return "na";
 
+  if (record.no_expiration) {
+    if (record.year) return "ok";
+    // sem ano informado, ainda falta concluir
+  }
+
   if (record.year) {
     const validUntilYear = record.year + settings.validity_years;
     if (validUntilYear <= currentYear) return "overdue";
@@ -143,6 +149,7 @@ export function formatPlannedFor(value: string | null | undefined): string {
 
 export function statusDistance(record: StatusRecord, settings: StatusSettings, currentYear = new Date().getFullYear()) {
   if (record.not_applicable) return "Não aplicável";
+  if (record.no_expiration && record.year) return `Concluído em ${record.year} · Não vence`;
   if (record.planned && record.planned_for) {
     const date = parsePlannedFor(record.planned_for);
     if (date) {
