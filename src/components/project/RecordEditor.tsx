@@ -40,6 +40,7 @@ export function RecordEditor({ record, trigger }: { record: ProjectRecord; trigg
   const [year, setYear] = useState(record.year?.toString() ?? "");
   const [requested, setRequested] = useState(record.requested);
   const [notApplicable, setNotApplicable] = useState<boolean>(Boolean((record as any).not_applicable));
+  const [noExpiration, setNoExpiration] = useState<boolean>(Boolean((record as any).no_expiration));
   const [planned, setPlanned] = useState<boolean>(Boolean((record as any).planned));
   const initialPlanned = parsePlanned((record as any).planned_for ?? null);
   const [plannedMonth, setPlannedMonth] = useState(initialPlanned.month);
