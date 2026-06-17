@@ -252,8 +252,13 @@ export default function Index() {
     <main className="space-y-5">
       <header className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
-          <h1 className="text-xl font-semibold tracking-normal sm:text-2xl">Painel de Projetos</h1>
-          <p className="text-xs text-muted-foreground sm:text-sm">Status de validade por cliente e tipo de serviço.</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-semibold tracking-normal sm:text-2xl">Painel de Projetos SISRAMOS</h1>
+            <Badge variant="secondary" className="rounded-md text-[11px] font-medium">
+              Acompanhamento Vercel
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground sm:text-sm">Status de validade por cliente, tipo de serviço e responsável.</p>
         </div>
         <div className="hidden md:block">
           <CreateClientDialog trigger={<Button><Plus className="h-4 w-4" />Novo cliente</Button>} />

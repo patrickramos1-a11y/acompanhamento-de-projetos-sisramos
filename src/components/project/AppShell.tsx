@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Top bar (mobile only) */}
       <header className="sticky top-0 z-40 flex h-12 items-center gap-3 border-b border-border bg-card/90 px-4 backdrop-blur lg:hidden">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
-          PC
+          SR
         </div>
         <p className="truncate text-sm font-semibold text-foreground">{currentLabel}</p>
       </header>
@@ -29,10 +29,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex flex-col gap-8 p-4">
           <div className="flex items-center gap-3 py-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-              PC
+              SR
             </div>
             <div>
-              <p className="text-sm font-semibold text-sidebar-foreground">Projetos</p>
+              <p className="text-sm font-semibold text-sidebar-foreground">SISRAMOS Projetos</p>
               <p className="text-xs text-muted-foreground">Controle de validade</p>
             </div>
           </div>
