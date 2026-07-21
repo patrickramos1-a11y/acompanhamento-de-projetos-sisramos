@@ -22,6 +22,18 @@ export type StatusSettings = {
   warning_years: number;
 };
 
+export type StatusProjectType = {
+  validity_years_override?: number | null;
+};
+
+export function effectiveStatusSettings(settings: StatusSettings, type?: StatusProjectType | null): StatusSettings {
+  const override = type?.validity_years_override;
+  return {
+    ...settings,
+    validity_years: typeof override === "number" && Number.isFinite(override) ? override : settings.validity_years,
+  };
+}
+
 export const statusMeta: Record<StatusKey, { label: string; short: string; rank: number; className: string; dotClassName: string }> = {
   overdue: {
     label: "Defasado",

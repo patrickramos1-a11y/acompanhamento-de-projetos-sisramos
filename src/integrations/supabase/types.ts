@@ -120,6 +120,7 @@ export type Database = {
           is_active: boolean
           name: string
           updated_at: string
+          validity_years_override: number | null
         }
         Insert: {
           abbreviation: string
@@ -129,6 +130,7 @@ export type Database = {
           is_active?: boolean
           name: string
           updated_at?: string
+          validity_years_override?: number | null
         }
         Update: {
           abbreviation?: string
@@ -138,6 +140,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           updated_at?: string
+          validity_years_override?: number | null
         }
         Relationships: []
       }

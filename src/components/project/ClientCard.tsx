@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   complianceScore,
   computeStatus,
+  effectiveStatusSettings,
   formatPlannedFor,
   StatusKey,
   statusDistance,
@@ -88,8 +89,9 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
     .map((type) => {
       const raw = recordsByType.get(type.id);
       const record = raw ?? { year: null, requested: false, not_applicable: false, planned: false, planned_for: null };
-      const status = computeStatus(record as any, settings);
-      return { type, record, status };
+      const typeConfig = effectiveStatusSettings(settings, type);
+      const status = computeStatus(record as any, typeConfig);
+      return { type, record, status, typeConfig };
     })
     .sort((a, b) => {
       // N/A always last
@@ -181,8 +183,8 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {items.map(({ type, record, status }) => {
-            const until = validUntil(record.year, settings);
+          {items.map(({ type, record, status, typeConfig }) => {
+            const until = validUntil(record.year, typeConfig);
             const meta = statusMeta[status];
             const isHighlighted =
               !!highlightResponsibleIds &&
@@ -231,7 +233,7 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
                 <TooltipContent>
                   <p className="font-medium">{type.name}</p>
                   <p>{meta.label}{(record as any).no_expiration ? " · não vence" : until ? ` · válido até ${until}` : ""}</p>
-                  <p>{statusDistance(record, settings)}</p>
+                  <p>{statusDistance(record, typeConfig)}</p>
                   {responsible ? <p className="text-muted-foreground">Responsável: {responsible.name}</p> : null}
                 </TooltipContent>
               </Tooltip>

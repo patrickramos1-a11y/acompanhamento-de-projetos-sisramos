@@ -14,6 +14,13 @@ import { ResponsibleAvatar } from "@/components/project/ResponsibleAvatar";
 import { nextDefaultColor } from "@/lib/responsible-colors";
 import { ProjectType, Responsible, useCreateClient, useCreateProjectType, useCreateResponsible, useDeleteClient, useDeleteProjectType, useDeleteResponsible, usePlatformData, useResponsibles, useUpdateClient, useUpdateProjectType, useUpdateResponsible, useUpdateSettings } from "@/hooks/useProjectData";
 
+function parseValidityOverride(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function CreateClientDialog({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -47,13 +54,21 @@ function CreateProjectTypeDialog({ nextOrder }: { nextOrder: number }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [abbreviation, setAbbreviation] = useState("");
+  const [validityOverride, setValidityOverride] = useState("");
   const createType = useCreateProjectType();
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    await createType.mutateAsync({ name, abbreviation: abbreviation.toUpperCase(), display_order: nextOrder, is_active: true });
+    await createType.mutateAsync({
+      name,
+      abbreviation: abbreviation.toUpperCase(),
+      display_order: nextOrder,
+      is_active: true,
+      validity_years_override: parseValidityOverride(validityOverride),
+    });
     setName("");
     setAbbreviation("");
+    setValidityOverride("");
     setOpen(false);
   }
 
@@ -65,6 +80,10 @@ function CreateProjectTypeDialog({ nextOrder }: { nextOrder: number }) {
         <form className="space-y-4" onSubmit={submit}>
           <div className="space-y-2"><Label>Nome</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
           <div className="space-y-2"><Label>Abreviação</Label><Input value={abbreviation} onChange={(e) => setAbbreviation(e.target.value.toUpperCase())} required /></div>
+          <div className="space-y-2">
+            <Label>Validade propria em anos</Label>
+            <Input type="number" min={1} max={50} placeholder="Geral" value={validityOverride} onChange={(e) => setValidityOverride(e.target.value)} />
+          </div>
           <DialogFooter><Button disabled={createType.isPending}>Criar</Button></DialogFooter>
         </form>
       </DialogContent>
@@ -77,23 +96,47 @@ function TypeRow({ type }: { type: ProjectType }) {
   const deleteType = useDeleteProjectType();
   const [name, setName] = useState(type.name);
   const [abbr, setAbbr] = useState(type.abbreviation);
+  const [validityOverride, setValidityOverride] = useState(type.validity_years_override?.toString() ?? "");
 
   useEffect(() => {
     setName(type.name);
     setAbbr(type.abbreviation);
-  }, [type.name, type.abbreviation]);
+    setValidityOverride(type.validity_years_override?.toString() ?? "");
+  }, [type.name, type.abbreviation, type.validity_years_override]);
 
   return (
-    <div className="rounded-lg border bg-card p-3 space-y-2 sm:grid sm:grid-cols-[1fr_120px_auto_auto] sm:items-center sm:gap-2 sm:space-y-0">
+    <div className="rounded-lg border bg-card p-3 space-y-2 sm:grid sm:grid-cols-[1fr_120px_150px_auto_auto] sm:items-center sm:gap-2 sm:space-y-0">
       <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" />
       <Input value={abbr} onChange={(e) => setAbbr(e.target.value.toUpperCase())} placeholder="Sigla" />
+      <Input
+        type="number"
+        min={1}
+        max={50}
+        value={validityOverride}
+        onChange={(e) => setValidityOverride(e.target.value)}
+        placeholder="Geral"
+        title="Validade propria em anos"
+      />
       <div className="flex items-center justify-between gap-2 sm:contents">
         <div className="flex items-center gap-2 text-xs text-muted-foreground sm:hidden">
           Ativo
         </div>
         <Switch checked={type.is_active} onCheckedChange={(checked) => updateType.mutate({ id: type.id, values: { is_active: checked } })} />
         <div className="flex gap-2">
-          <Button size="icon" variant="outline" onClick={() => updateType.mutate({ id: type.id, values: { name, abbreviation: abbr.toUpperCase() } })}><Save className="h-4 w-4" /></Button>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => updateType.mutate({
+              id: type.id,
+              values: {
+                name,
+                abbreviation: abbr.toUpperCase(),
+                validity_years_override: parseValidityOverride(validityOverride),
+              },
+            })}
+          >
+            <Save className="h-4 w-4" />
+          </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild><Button size="icon" variant="destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
             <AlertDialogContent>

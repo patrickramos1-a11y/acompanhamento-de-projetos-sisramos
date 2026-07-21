@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, PageSkeleton, StatusBadge } from "@/components/project/status-ui";
 import { usePlatformData, useUpdateProjectRecord } from "@/hooks/useProjectData";
-import { computeStatus, StatusKey, statusMeta, statusOrder } from "@/lib/status";
+import { computeStatus, effectiveStatusSettings, StatusKey, statusMeta, statusOrder } from "@/lib/status";
 
 type ViewMode = "flat" | "client" | "type";
 
@@ -33,7 +33,7 @@ export default function Demands() {
     if (!config) return [];
     return (records.data ?? [])
       .filter((record) => record.project_types?.is_active)
-      .map((record) => ({ record, status: computeStatus(record, config) }))
+      .map((record) => ({ record, status: computeStatus(record, effectiveStatusSettings(config, record.project_types)) }))
       .filter(({ status }) => status !== "ok" && status !== "na" && status !== "planned")
       .filter(({ status }) => statusFilter === "all" || status === statusFilter)
       .filter(({ record }) => typeFilter === "all" || record.project_type_id === typeFilter)

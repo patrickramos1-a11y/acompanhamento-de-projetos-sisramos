@@ -2,7 +2,7 @@ import { Bar, BarChart, CartesianGrid, Cell, LabelList, Pie, PieChart, Responsiv
 import { EmptyState, PageSkeleton } from "@/components/project/status-ui";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePlatformData } from "@/hooks/useProjectData";
-import { computeStatus, statusMeta, statusOrder } from "@/lib/status";
+import { computeStatus, effectiveStatusSettings, statusMeta, statusOrder, worstStatus } from "@/lib/status";
 import { statusForClient } from "@/lib/project-view";
 
 const chartColor: Record<string, string> = {
@@ -25,7 +25,11 @@ export default function Metrics() {
 
   const activeTypes = projectTypes.data ?? [];
   const allRecords = (records.data ?? []).filter((record) => record.project_types?.is_active);
-  const distribution = statusOrder.map((status) => ({ name: statusMeta[status].label, status, value: allRecords.filter((record) => computeStatus(record, config) === status).length })).filter((item) => item.value > 0);
+  const distribution = statusOrder.map((status) => ({
+    name: statusMeta[status].label,
+    status,
+    value: allRecords.filter((record) => computeStatus(record, effectiveStatusSettings(config, record.project_types)) === status).length,
+  })).filter((item) => item.value > 0);
   const compliance = (clients.data ?? [])
     .map((client) => {
       const result = statusForClient(client, activeTypes, allRecords, config);
@@ -41,18 +45,24 @@ export default function Metrics() {
     .sort((a, b) => a.conformidade - b.conformidade);
   const byType = activeTypes.map((type) => {
     const typeRecords = allRecords.filter((record) => record.project_type_id === type.id);
-    return statusOrder.reduce<Record<string, string | number>>((acc, status) => ({ ...acc, [statusMeta[status].label]: typeRecords.filter((record) => computeStatus(record, config) === status).length }), { name: type.abbreviation });
+    const typeConfig = effectiveStatusSettings(config, type);
+    return statusOrder.reduce<Record<string, string | number>>((acc, status) => ({ ...acc, [statusMeta[status].label]: typeRecords.filter((record) => computeStatus(record, typeConfig) === status).length }), { name: type.abbreviation });
   });
   const current = new Date().getFullYear();
   const recordYears = allRecords.map((record) => record.year).filter((year): year is number => typeof year === "number");
   const timeline = recordYears.length
     ? (() => {
         const minYear = Math.min(...recordYears);
-        const maxValid = Math.max(...recordYears) + config.validity_years;
+        const maxValid = Math.max(...allRecords
+          .filter((record) => typeof record.year === "number")
+          .map((record) => record.year! + effectiveStatusSettings(config, record.project_types).validity_years));
         const endYear = Math.max(maxValid, current);
         return Array.from({ length: endYear - minYear + 1 }, (_, index) => {
           const year = minYear + index;
-          return { year, status: computeStatus({ year, requested: false }, config, current) };
+          const typeStatuses = activeTypes.length
+            ? activeTypes.map((type) => computeStatus({ year, requested: false }, effectiveStatusSettings(config, type), current))
+            : [computeStatus({ year, requested: false }, config, current)];
+          return { year, status: worstStatus(typeStatuses) };
         });
       })()
     : [];
@@ -68,7 +78,7 @@ export default function Metrics() {
       const plannedAbbrs: string[] = [];
       const lateAbbrs: string[] = [];
       for (const rec of assigned) {
-        const status = computeStatus(rec, config);
+        const status = computeStatus(rec, effectiveStatusSettings(config, rec.project_types));
         const abbr = rec.project_types?.abbreviation ?? "—";
         if (status === "late") {
           lateCount += 1;

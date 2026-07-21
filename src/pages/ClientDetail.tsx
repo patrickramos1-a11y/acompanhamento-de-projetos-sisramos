@@ -6,7 +6,7 @@ import { RecordEditor } from "@/components/project/RecordEditor";
 import { ResponsibleAvatar } from "@/components/project/ResponsibleAvatar";
 import { ComplianceBar, EmptyState, PageSkeleton, StatusBadge } from "@/components/project/status-ui";
 import { usePlatformData } from "@/hooks/useProjectData";
-import { computeStatus, statusDistance, statusMeta, validUntil } from "@/lib/status";
+import { computeStatus, effectiveStatusSettings, statusDistance, statusMeta, validUntil } from "@/lib/status";
 import { complianceScore } from "@/lib/status";
 import { sortByCriticality } from "@/lib/project-view";
 
@@ -23,7 +23,11 @@ export default function ClientDetail() {
   const responsibleMap = new Map((responsibles.data ?? []).map((r) => [r.id, r]));
   const byType = new Map((records.data ?? []).filter((record) => record.client_id === client.id).map((record) => [record.project_type_id, record]));
   const rows = types
-    .map((type) => ({ type, record: byType.get(type.id), status: computeStatus(byType.get(type.id) ?? { year: null, requested: false }, config) }))
+    .map((type) => {
+      const typeConfig = effectiveStatusSettings(config, type);
+      const record = byType.get(type.id);
+      return { type, record, typeConfig, status: computeStatus(record ?? { year: null, requested: false }, typeConfig) };
+    })
     .sort((a, b) => sortByCriticality(a.status, b.status));
   const score = complianceScore(rows.map((row) => row.status));
   const hasAnyResponsible = rows.some((r) => r.record && (r.record as any).responsible_id);
@@ -46,8 +50,8 @@ export default function ClientDetail() {
 
       {/* Mobile: card list */}
       <section className="space-y-2 md:hidden">
-        {rows.map(({ type, record, status }) => {
-          const until = record ? ((record as any).no_expiration ? "Não vence" : validUntil(record.year, config)) : null;
+        {rows.map(({ type, record, status, typeConfig }) => {
+          const until = record ? ((record as any).no_expiration ? "Não vence" : validUntil(record.year, typeConfig)) : null;
           const rid = record ? ((record as any).responsible_id as string | null) : null;
           const r = rid ? responsibleMap.get(rid) : undefined;
           return (
@@ -72,7 +76,7 @@ export default function ClientDetail() {
                     </div>
                     <div className="col-span-2">
                       <dt className="text-muted-foreground">Situação</dt>
-                      <dd>{statusDistance(record, config)}</dd>
+                      <dd>{statusDistance(record, typeConfig)}</dd>
                     </div>
                     {r ? (
                       <div className="col-span-2">
@@ -118,13 +122,13 @@ export default function ClientDetail() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map(({ type, record, status }) => record ? (
+            {rows.map(({ type, record, status, typeConfig }) => record ? (
               <TableRow key={type.id}>
                 <TableCell><div className="font-medium">{type.name}</div><div className="text-xs text-muted-foreground">{type.abbreviation}</div></TableCell>
                 <TableCell><StatusBadge status={status} /></TableCell>
                 <TableCell>{record.year ?? "—"}</TableCell>
-                <TableCell>{(record as any).no_expiration ? <span className="text-status-ok">Não vence</span> : (validUntil(record.year, config) ?? "—")}</TableCell>
-                <TableCell className="text-muted-foreground">{statusDistance(record, config)}</TableCell>
+                <TableCell>{(record as any).no_expiration ? <span className="text-status-ok">Não vence</span> : (validUntil(record.year, typeConfig) ?? "—")}</TableCell>
+                <TableCell className="text-muted-foreground">{statusDistance(record, typeConfig)}</TableCell>
                 {hasAnyResponsible ? (
                   <TableCell>
                     {(() => {
