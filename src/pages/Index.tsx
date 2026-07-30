@@ -32,6 +32,7 @@ export default function Index() {
   const [responsibleFilters, setResponsibleFilters] = useState<string[]>([]);
   const [responsibleFilterOpen, setResponsibleFilterOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [showNotApplicable, setShowNotApplicable] = useState(false);
 
   const types = projectTypes.data ?? [];
   const allRecords = records.data ?? [];
@@ -77,7 +78,6 @@ export default function Index() {
         const dir = sortDir === "asc" ? 1 : -1;
         if (sortKey === "alpha") return a.client.name.localeCompare(b.client.name) * dir;
         if (sortKey === "score") return (a.score - b.score) * dir;
-        // critical: desc = mais críticos primeiro
         const cmp = statusMeta[b.worst].rank - statusMeta[a.worst].rank;
         return (sortDir === "desc" ? cmp : -cmp) || a.client.name.localeCompare(b.client.name);
       });
@@ -96,12 +96,14 @@ export default function Index() {
     (statusFilters.length > 0 ? 1 : 0) +
     (selectedTypeIds.length > 0 ? 1 : 0) +
     (responsibleFilters.length > 0 ? 1 : 0) +
+    (showNotApplicable ? 1 : 0) +
     (sortKey !== "critical" || sortDir !== "desc" ? 1 : 0);
 
   const clearAllFilters = () => {
     setStatusFilters([]);
     setSelectedTypeIds([]);
     setResponsibleFilters([]);
+    setShowNotApplicable(false);
     setSortKey("critical");
     setSortDir("desc");
   };
@@ -245,6 +247,22 @@ export default function Index() {
           </div>
         </div>
       )}
+
+      <div className="space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Visualização</p>
+        <button
+          type="button"
+          onClick={() => setShowNotApplicable((value) => !value)}
+          className={cn(
+            "h-9 rounded-full border px-3 text-xs font-medium transition-colors",
+            showNotApplicable
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border text-muted-foreground hover:bg-accent",
+          )}
+        >
+          {showNotApplicable ? "Ocultar N/A" : "Mostrar N/A"}
+        </button>
+      </div>
     </div>
   );
 
@@ -266,7 +284,7 @@ export default function Index() {
       </header>
 
       <section className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-5">
-        {[['Clientes', total], ['Defasados', critical], ['Atrasados', late], ['Em atenção', warning], ['Conformidade média', `${avg}%`]].map(([label, value], idx) => (
+        {[["Clientes", total], ["Defasados", critical], ["Atrasados", late], ["Em atenção", warning], ["Conformidade média", `${avg}%`]].map(([label, value], idx) => (
           <div
             key={label as string}
             className={cn(
@@ -280,7 +298,6 @@ export default function Index() {
         ))}
       </section>
 
-      {/* Mobile: search + single filter button */}
       <section className="flex flex-col gap-2 lg:hidden">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -316,7 +333,6 @@ export default function Index() {
         </Sheet>
       </section>
 
-      {/* Desktop: full filter bar */}
       <section className="hidden flex-col gap-3 lg:flex lg:flex-row lg:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -523,6 +539,13 @@ export default function Index() {
             </Command>
           </PopoverContent>
         </Popover>
+        <Button
+          variant={showNotApplicable ? "default" : "outline"}
+          className="w-full lg:w-auto"
+          onClick={() => setShowNotApplicable((value) => !value)}
+        >
+          {showNotApplicable ? "Ocultar N/A" : "Mostrar N/A"}
+        </Button>
       </section>
 
       {total === 0 ? (
@@ -540,12 +563,12 @@ export default function Index() {
               settings={config}
               responsibles={allResponsibles}
               highlightResponsibleIds={responsibleFilters.length > 0 ? responsibleFilters : null}
+              showNotApplicable={showNotApplicable}
             />
           ))}
         </section>
       )}
 
-      {/* FAB mobile */}
       <div className="fixed bottom-20 right-4 z-30 md:hidden safe-bottom">
         <CreateClientDialog
           trigger={
