@@ -22,6 +22,7 @@ type Props = {
   settings: Settings;
   responsibles?: Responsible[];
   highlightResponsibleIds?: string[] | null;
+  showNotApplicable?: boolean;
 };
 
 function scoreTone(score: number) {
@@ -81,7 +82,7 @@ function chipIcon(status: StatusKey) {
   }
 }
 
-export function ClientCard({ client, types, records, settings, responsibles, highlightResponsibleIds }: Props) {
+export function ClientCard({ client, types, records, settings, responsibles, highlightResponsibleIds, showNotApplicable = false }: Props) {
   const recordsByType = new Map(records.map((record) => [record.project_type_id, record]));
   const responsibleMap = new Map((responsibles ?? []).map((r) => [r.id, r]));
 
@@ -94,7 +95,6 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
       return { type, record, status, typeConfig };
     })
     .sort((a, b) => {
-      // N/A always last
       if (a.status === "na" && b.status !== "na") return 1;
       if (b.status === "na" && a.status !== "na") return -1;
       return statusMeta[b.status].rank - statusMeta[a.status].rank;
@@ -102,6 +102,8 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
 
   const statuses = items.map((i) => i.status);
   const score = complianceScore(statuses);
+  const hiddenNotApplicableCount = showNotApplicable ? 0 : items.filter((i) => i.status === "na").length;
+  const visibleItems = showNotApplicable ? items : items.filter((i) => i.status !== "na");
 
   const counts = {
     overdue: statuses.filter((s) => s === "overdue").length,
@@ -145,7 +147,6 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
       )}
       style={{ display: "flex", flexDirection: "column", gap: 12 }}
     >
-      {/* Cabeçalho */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -173,7 +174,6 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
         </div>
       </div>
 
-      {/* Corpo */}
       <div className="flex flex-col gap-2.5">
         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
           <div
@@ -183,7 +183,7 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {items.map(({ type, record, status, typeConfig }) => {
+          {visibleItems.map(({ type, record, status, typeConfig }) => {
             const until = validUntil(record.year, typeConfig);
             const meta = statusMeta[status];
             const isHighlighted =
@@ -239,10 +239,14 @@ export function ClientCard({ client, types, records, settings, responsibles, hig
               </Tooltip>
             );
           })}
+          {hiddenNotApplicableCount > 0 ? (
+            <span className="inline-flex h-7 items-center rounded-md border border-dashed border-status-na/35 px-2 text-[11px] font-medium text-muted-foreground/70">
+              {hiddenNotApplicableCount} N/A ocultos
+            </span>
+          ) : null}
         </div>
       </div>
 
-      {/* Rodapé condicional */}
       {(hasOverdue || hasLate || hasWarning) && (
         <div className="flex flex-col gap-1 border-t border-border/60 pt-2.5">
           {hasOverdue && (
